@@ -157,10 +157,12 @@ Temporary Items
 ### SAM+config Patch ###
 # SAM config - exclude this file if sharing publicly
 samconfig.toml
+y
 
 ### Gradle ###
 .gradle
 **/build/
+**/.idea/
 !src/**/build/
 
 # Ignore Gradle GUI config
