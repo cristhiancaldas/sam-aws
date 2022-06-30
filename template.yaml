@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  Stage:
+    Type: String
+    Description: Stage name to deploy resources to
+    AllowedValues:
+      - dev
+      - qa
+      - prod
+  AppName:
+     Type: String
+     Default: app-user
+
+Globals:
+  Function:
+    Runtime: java11
+    Timeout: 60
+    MemorySize: 512
+
+Resources:
+
+  UserDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      TableName: "USER_OPS"
+      AttributeDefinitions:
+        -   AttributeName: ID_USER_PK
+            AttributeType: N
+      KeySchema:
+        -   AttributeName: ID_USER_PK
+            KeyType: HASH
+      GlobalSecondaryIndexes:
+        -   IndexName: index-id-user
+            KeySchema:
+              -   AttributeName: ID_USER_PK
+                  KeyType: HASH
+            Projection:
+              NonKeyAttributes:
+                - FIRST_NAME
+                - LAST_NAME
+                - EMAIL
+                - PHONE
+                - COUNTRY
+                - REGION
+              ProjectionType: INCLUDE
+
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${Stage}-${AppName}-api"
+      StageName: !Ref Stage
+      TracingEnabled: true
+
+  UserFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: GetUser
+      CodeUri: "app"
+      Handler: app.bank.functions.UserFunction::handleRequest
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserDynamoTable
+      Events:
+        GetUser:
+          Type: Api
+          Properties:
+            Method: GET
+            Path: /user
+            RestApiId:
+              Ref: ApiGatewayApi
+        AddUser:
+          Type: Api
+          Properties:
+            Method: POST
+            Path: /user
+            RestApiId:
+              Ref: ApiGatewayApi
+
+Outputs:
+  MyApi:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
+
