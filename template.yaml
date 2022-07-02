@@ -5,10 +5,8 @@ Parameters:
   Stage:
     Type: String
     Description: Stage name to deploy resources to
-    AllowedValues:
-      - dev
-      - qa
-      - prod
+    Default: dev
+
   AppName:
      Type: String
      Default: app-user
