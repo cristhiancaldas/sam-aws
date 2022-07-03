@@ -78,6 +78,13 @@ Resources:
             Path: /user
             RestApiId:
               Ref: ApiGatewayApi
+        GetValidate:
+          Type: Api
+          Properties:
+            Method: GET
+            Path: /validate
+            RestApiId:
+              Ref: ApiGatewayApi
 
 Outputs:
   MyApi:
