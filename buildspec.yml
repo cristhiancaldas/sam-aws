@@ -2,7 +2,7 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: corretto8
+      java: corretto17
   build:
     commands:
       - aws cloudformation package --template-file template.yaml --s3-bucket cristhian-lambda-pipeline --output-template-file outputSamTemplate.yaml
