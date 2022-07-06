@@ -5,7 +5,6 @@ phases:
       java: corretto11
   build:
     commands:
-      - ./gradlew clean buildZip
       - sam package
         --template-file template.yaml
         --output-template-file outputSamTemplate.yaml
