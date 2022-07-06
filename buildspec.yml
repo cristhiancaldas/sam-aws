@@ -2,12 +2,14 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: corretto8
+      java: corretto11
   build:
     commands:
-      - aws cloudformation package --template-file template.yaml --s3-bucket cristhian-lambda-pipeline --output-template-file outputSamTemplate.yaml
+      - ./gradlew clean buildZip
+      - sam package
+        --template-file template.yaml
+        --output-template-file outputSamTemplate.yaml
+        --s3-bucket cristhian-lambda-pipeline
 artifacts:
-  type: zip
   files:
-    - template.yaml
     - outputSamTemplate.yaml
