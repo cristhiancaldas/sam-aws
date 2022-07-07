@@ -58,7 +58,7 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: GetUser
-      CodeUri: "app"
+      CodeUri: app/build/libs/app.jar
       Handler: app.bank.functions.UserFunction::handleRequest
       Policies:
         - DynamoDBReadPolicy:
