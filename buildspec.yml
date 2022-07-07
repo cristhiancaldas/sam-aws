@@ -5,6 +5,7 @@ phases:
       java: corretto11
   build:
     commands:
+      - gradle -v
       - echo start build
       - sam build
       - echo start package
