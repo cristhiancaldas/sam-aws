@@ -64,7 +64,7 @@ class UserFunction : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxy
     }
 
     private fun getValidate(): APIGatewayProxyResponseEvent {
-        val message = "Service Operative - 2022"
+        val message = "Service Operative - 2022 - Prod"
         return ok(message)
     }
 }
