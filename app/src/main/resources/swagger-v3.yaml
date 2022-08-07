@@ -33,8 +33,6 @@ paths:
       x-amazon-apigateway-request-validator: params-only
       x-amazon-apigateway-integration:
         httpMethod: POST
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AsyncEventHandler.Arn}:live/invocations
         timeoutInMillis: 29000
         type: "aws_proxy"
       responses:
@@ -123,8 +121,6 @@ paths:
         credentials:
           Fn::ImportValue: OrderHandlerInvokeRoleArn
         uri:
-          Fn::Sub:
-            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
             - Region:
                 Fn::Sub: ${AWS::Region}
               Arn:
@@ -169,8 +165,6 @@ paths:
         credentials:
           Fn::ImportValue: OrderHandlerInvokeRoleArn
         uri:
-          Fn::Sub:
-            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
             - Region:
                 Fn::Sub: ${AWS::Region}
               Arn:
@@ -222,8 +216,6 @@ paths:
       x-amazon-apigateway-request-validator: params-only
       x-amazon-apigateway-integration:
         httpMethod: POST
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AsyncEventHandler.Arn}:live/invocations
         timeoutInMillis: 29000
         type: "aws_proxy"
       responses:
