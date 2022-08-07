@@ -20,6 +20,10 @@ repositories {
 
 dependencies {
 
+
+    implementation("org.springdoc:springdoc-openapi-data-rest:1.6.0")
+    implementation("org.springdoc:springdoc-openapi-ui:1.6.0")
+    implementation("org.springdoc:springdoc-openapi-kotlin:1.6.0")
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
     // Use the Kotlin JDK 8 standard library.

@@ -35,20 +35,6 @@ Resources:
       KeySchema:
         -   AttributeName: ID_USER_PK
             KeyType: HASH
-      GlobalSecondaryIndexes:
-        -   IndexName: index-id-user
-            KeySchema:
-              -   AttributeName: ID_USER_PK
-                  KeyType: HASH
-            Projection:
-              NonKeyAttributes:
-                - FIRST_NAME
-                - LAST_NAME
-                - EMAIL
-                - PHONE
-                - COUNTRY
-                - REGION
-              ProjectionType: INCLUDE
 
   ApiGatewayApi:
     Type: AWS::Serverless::Api
@@ -56,6 +42,11 @@ Resources:
       Name: !Sub "${Stage}-${AppName}-api"
       StageName: !Ref Stage
       TracingEnabled: true
+      DefinitionBody:
+         Fn::Transform:
+           Name: AWS::Include
+           Parameters:
+             Location: ./app/src/main/resources/swagger-v3.yaml
 
   UserFunction:
     Type: 'AWS::Serverless::Function'
@@ -64,7 +55,7 @@ Resources:
       CodeUri: "app"
       Handler: app.bank.functions.UserFunction::handleRequest
       Policies:
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref UserDynamoTable
       Events:
         GetUser:

@@ -1,0 +1,3512 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: supplier-integration-api
+x-amazon-apigateway-request-validators:
+  all:
+    validateRequestBody: true
+    validateRequestParameters: true
+  params-only:
+    validateRequestBody: false
+    validateRequestParameters: true
+  body:
+    validateRequestBody: true
+    validateRequestParameters: false
+  none:
+    validateRequestBody: false
+    validateRequestParameters: false
+paths:
+  /credits:
+    post:
+      operationId: PostSupplierCreditsMethod
+      description: PostSupplierCreditsMethod method with API Gateway & Open API.
+      requestBody:
+        description: addCreditRequest
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddCredits"
+
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::GetAtt: [ApiRole, Arn]
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AsyncEventHandler.Arn}:live/invocations
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /orders:
+    get:
+      operationId: GetOrderMethod
+      summary: "Find order"
+      description: "Find order"
+      parameters:
+        - name: from
+          in: query
+          description: "Optional to date value: Format [YYYY-MM-DD (HH:MM:SS)], if full detail is selected HH:MM:SS is mandatory"
+          required: false
+          schema:
+            type: string
+        - name: first
+          in: query
+          description: "Maximum number of elements"
+          required: false
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+            format: int32
+        - name: status
+          in: query
+          description: "Filter by the status order"
+          required: false
+          schema:
+            type: string
+        - name: to
+          in: query
+          description: "Optional to date value: Format [YYYY-MM-DD (HH:MM:SS)], if full detail is selected HH:MM:SS is mandatory"
+          required: false
+          schema:
+            type: string
+        - name: full_detail
+          in: query
+          description: Show full detail order
+          required: true
+          schema:
+            type: boolean
+            default: false
+        - name: after
+          in: query
+          description: Last evaluated key
+          required: false
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: OrderHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: OrderHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatorSupplierResponse"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+  /order/{SupplierOrderId}:
+    get:
+      operationId: GetSupplierOrderIdMethod
+      summary: "Get order detail"
+      description: "Get order detail"
+      parameters:
+        - in: path
+          name: SupplierOrderId
+          description: SupplierOrderId
+          required: true
+          schema:
+            type: integer
+            format: "int64"
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: OrderHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: OrderHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierOrderDetailResponse"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+      security:
+        - bearerAuth: []
+  /order/{SupplierOrderId}/confirm:
+    post:
+      operationId: PostSupplierOrderIdConfirmMethod
+      summary: "Confirm order (Asynchronous)."
+      description: "Confirm order (Asynchronous)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: SupplierOrderId
+          description: supplierOrderId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: orderRequest
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmOrderRequest"
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::GetAtt: [ApiRole, Arn]
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AsyncEventHandler.Arn}:live/invocations
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /order/{SupplierOrderId}/cancel:
+    post:
+      operationId: PostSupplierOrderIdCancelMethod
+      summary: "Cancel Order (Asynchronous)."
+      description: "Cancel Order (Asynchronous)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: SupplierOrderId
+          description: SupplierOrderId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: cancelOrderRequest
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelSupplierOrderRequest"
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::GetAtt: [ApiRole, Arn]
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AsyncEventHandler.Arn}:live/invocations
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /order/{SupplierOrderId}/deliver:
+    post:
+      operationId: PostSupplierOrderIdDeliverMethod
+      summary: "Deliver Order (Asynchronous)."
+      description: "Deliver Order (Asynchronous)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: SupplierOrderId
+          description: SupplierOrderId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: DeliverOrderRequest
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShipOrderRequest"
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::GetAtt: [ApiRole, Arn]
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AsyncEventHandler.Arn}:live/invocations
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /customer_type:
+    get:
+      operationId: GetCustomerTypeMethod
+      summary: "Get Customer Type"
+      description: "Get Customer Type"
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        requestParameters:
+          integration.request.header.x-apiversion: "'v3'"
+        credentials:
+          Fn::GetAtt: [ApiRole, Arn]
+        uri:
+          Fn::Sub:
+            - ${Uri}external/customer_type
+            - Uri:
+                Fn::FindInMap:
+                  - Config
+                  - Ref: EnvironmentStackName
+                  - WabiUri
+        timeoutInMillis: 29000
+        type: http_proxy
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/CustomerTypeResponse"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+      security:
+        - bearerAuth: []
+
+  /price_list_async:
+    post:
+      operationId: PostPriceListAsyncMethod
+      summary: "Create new price list (async)"
+      description: "Create new price list (async)"
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: "body"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierIntegrationPriceListRequest"
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PriceListHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PriceListHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "202"
+      responses:
+        200:
+          description: "OK"
+        202:
+          description: "Accepted"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        400:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+  /price_list_async/{price_list_code}:
+    put:
+      operationId: PutPriceListAsyncMethod
+      summary: "Updates a price list (async)."
+      description: "Updates a price list(async)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: price_list_code
+          description: "PriceList Code"
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: "body"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierIntegrationPriceListRequest"
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PriceListHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PriceListHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        403:
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        404:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /price_list:
+    post:
+      operationId: PostPriceListMethod
+      summary: "Create new price list"
+      description: "Create new price list"
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: "body"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierIntegrationPriceListRequest"
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PriceListHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PriceListHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/CreatePriceListResponse"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+    get:
+      operationId: GetPriceListMethod
+      summary: "Get price list"
+      description: "Get price list"
+      parameters:
+        - name: after
+          in: query
+          description: Last evaluated key
+          required: false
+          schema:
+            type: string
+        - name: first
+          in: query
+          description: "Maximum number of elements"
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+            format: int32
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PriceListHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PriceListHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/SupplierPriceListIntegrationResponse"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+  /price_list/{price_list_code}:
+    put:
+      operationId: PutPriceListMethod
+      summary: "Updates a price list (Asynchronous)."
+      description: "Updates a price list (Asynchronous)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: price_list_code
+          description: "PriceList Code"
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: "body"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierIntegrationPriceListRequest"
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PriceListHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PriceListHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        403:
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        404:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+    get:
+      operationId: GetOnePriceList
+      summary: "Gets One priceList."
+      description: "Gets One priceList."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: price_list_code
+          description: "PriceList Code"
+          required: true
+          schema:
+            type: string
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PriceListHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PriceListHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierPriceListIntegrationResponse"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        403:
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        404:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /price_list/{price_list_code}/customer:
+    post:
+      operationId: PostPriceListIdCustomerMethod
+      summary: "Set Customer from PriceList (Asynchronous)."
+      description: "Set Customer from PriceList (Asynchronous)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: price_list_code
+          description: "PriceList Code"
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: "body"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerIntegrationIdentification"
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PriceListHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PriceListHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        403:
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        404:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+    delete:
+      operationId: DeletePriceListIdCustomerMethod
+      summary: "Delete Customer from PriceList (Asynchronous)."
+      description: "Delete Customer from PriceList (Asynchronous)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: price_list_code
+          description: "PriceList Code"
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: "body"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerIntegrationIdentification"
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PriceListHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PriceListHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        403:
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        404:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /price_list/{price_list_code}/disable:
+    post:
+      operationId: PostPriceListIdDisableMethod
+      summary: "Disable Price List (Asynchronous)."
+      description: "Disable Price List (Asynchronous)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: price_list_code
+          description: "PriceList Code"
+          required: true
+          schema:
+            type: string
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PriceListHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PriceListHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /price_list/{price_list_code}/enable:
+    post:
+      operationId: PostPriceListIdEnableMethod
+      summary: "Enable price list (Asynchronous)."
+      description: "Enable price list (Asynchronous)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: price_list_code
+          description: "PriceList Code"
+          required: true
+          schema:
+            type: string
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PriceListHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}:live/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PriceListHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /products:
+    get:
+      operationId: GetProductMethod
+      summary: "Get product"
+      description: "Get product"
+      parameters:
+        - name: first
+          in: query
+          description: "Number of elements to be checked"
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: after
+          in: query
+          description: Last evaluated key
+          required: false
+          schema:
+            type: string
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        requestParameters:
+          integration.request.header.x-apiversion: "'v3'"
+        credentials:
+          Fn::ImportValue: ProductHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: ProductSupplierHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplierProductResponse"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+      security:
+        - bearerAuth: []
+  /product/{ean}/enable:
+    post:
+      operationId: PostProductEnableEanMethod
+      summary: "Enable Product (Asynchronous)."
+      description: "Enable Product (Asynchronous)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: ean
+          description: ean
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierProductToggleRequest"
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: ProductHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: ProductSupplierHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /product/{ean}/disable:
+    post:
+      operationId: PostProductEanDisableMethod
+      summary: "Disable Product (Asynchronous)."
+      description: "Disable Product (Asynchronous)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: ean
+          description: Ean parameter that is passed via swagger & API Gateway.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierProductToggleRequest"
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: ProductHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: ProductSupplierHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /product/{ean}:
+    post:
+      operationId: PostProductEanMethod
+      summary: "Update Product (Asynchronous)."
+      description: "Update Product (Asynchronous)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: ean
+          description: ean
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplierProductChangeRequest"
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: ProductHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: ProductSupplierHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /products/price:
+    post:
+      operationId: PostProductPrices
+      summary: "Update product prices from price list"
+      description: "Update product prices from price list (Asynchronous)."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceListProductPriceRequest"
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: ProductHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: ProductSupplierHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /products/sku:
+    post:
+      operationId: PostProductSku
+      summary: "Create product sku"
+      description: "Create product sku (Asynchronous)."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductSkuRequest"
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: ProductHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: ProductSupplierHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        200:
+          description: "Success"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /suggested/order:
+    get:
+      operationId: GetSuggestedOrderMethod
+      summary: "Get suggested order"
+      description: "Get suggested order"
+      parameters:
+        - name: idType
+          in: query
+          description: Customer type ID
+          required: true
+          schema:
+            type: string
+            enum:
+              - ID
+              - SUPPLIER_CODE
+              - TAX_ID
+        - name: value
+          in: query
+          description: Value
+          required: true
+          schema:
+            type: string
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: SuggestedOrderHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: SuggestedOrderHandler
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/SuggestedOrder"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+      security:
+        - bearerAuth: []
+    post:
+      operationId: PostSuggestedOrderMethod
+      summary: "Creates Suggested Order (Asynchronous)."
+      description: "Creates Suggested Order (Asynchronous)."
+      requestBody:
+        description: "request"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetSuggestOrderRequest"
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::GetAtt: [ApiRole, Arn]
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AsyncEventHandler.Arn}:live/invocations
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+    delete:
+      operationId: DeleteSuggestedOrderMethod
+      summary: "Delete Suggested Order (Asynchronous)."
+      description: "Delete Suggested Order (Asynchronous)."
+      requestBody:
+        description: "request"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerIntegrationIdentification"
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::GetAtt: [ApiRole, Arn]
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AsyncEventHandler.Arn}:live/invocations
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /user/client/login:
+    post:
+      operationId: LoginMethod
+      summary: "Login"
+      description: "Login"
+      requestBody:
+        description: "request"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Login"
+      security:
+        - emptyAuth: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::GetAtt: [ApiRole, Arn]
+        uri:
+          Fn::Sub:
+            - ${Uri}user/client/login
+            - Uri:
+                Fn::FindInMap:
+                  - Config
+                  - Ref: EnvironmentStackName
+                  - WabiUri
+        timeoutInMillis: 29000
+        type: http_proxy
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+  /supplierCustomer:
+    get:
+      operationId: GetBySupplier
+      description: GetBySupplier method with API Gateway & Open API.
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        credentials:
+          Fn::ImportValue: SupplierCustomerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: SupplierCustomerHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+        "400":
+          description: bad input parameter
+    post:
+      operationId: PostBySupplier
+      description: PostBySupplier method with API Gateway & Open API.
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: SupplierCustomerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: SupplierCustomerHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+        "400":
+          description: bad input parameter
+
+  /supplierCustomer/customers/{customerId}:
+    delete:
+      operationId: DeleteByCustomer
+      description: DeleteByCustomer method with API Gateway & Open API.
+      parameters:
+        - in: path
+          name: customerId
+          description: CustomerId parameter that is passed via swagger & API Gateway.
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: SupplierCustomerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: SupplierCustomerHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+        "400":
+          description: bad input parameter
+    get:
+      operationId: GetByCustomer
+      description: GetByCustomer method with API Gateway & Open API.
+      parameters:
+        - in: path
+          name: customerId
+          description: CustomerId parameter that is passed via swagger & API Gateway.
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: SupplierCustomerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: SupplierCustomerHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+        "400":
+          description: bad input parameter
+  /supplierCustomer/clientCodes/{clientCode}:
+    delete:
+      operationId: DeleteBySupplierAndClientCode
+      description: DeleteBySupplierAndClientCode method with API Gateway & Open API.
+      parameters:
+        - in: path
+          name: clientCode
+          description: clientCode parameter that is passed via swagger & API Gateway.
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: SupplierCustomerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: SupplierCustomerHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+        "400":
+          description: bad input parameter
+    get:
+      operationId: GetBySupplierAndClientCode
+      description: GetBySupplierAndClientCode method with API Gateway & Open API.
+      parameters:
+        - in: path
+          name: clientCode
+          description: clientCode parameter that is passed via swagger & API Gateway.
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: SupplierCustomerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: SupplierCustomerHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+        "400":
+          description: bad input parameter
+  /customers:
+    get:
+      operationId: GetAllCustomers
+      description: GetAllCustomers method with API Gateway & Open API.
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: SupplierCustomerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: SupplierCustomerHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+        "400":
+          description: bad input parameter
+
+  /customers/{customerId}/clientCodes:
+    get:
+      operationId: GetCustomerById
+      description: GetCustomerById method with API Gateway & Open API.
+      parameters:
+        - in: path
+          name: customerId
+          description: customerId parameter that is passed via swagger & API Gateway.
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: SupplierCustomerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: SupplierCustomerHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+        "400":
+          description: bad input parameter
+  /supplierCustomer/checkCustomer:
+    post:
+      operationId: IsCustomerAssigned
+      description: IsCustomerAssigned method with API Gateway & Open API.
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: SupplierCustomerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: SupplierCustomerHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+        "400":
+          description: bad input parameter
+
+  /supplierCustomer/checkClientCode:
+    post:
+      operationId: IsClientCodeInUse
+      description: IsClientCodeInUse method with API Gateway & Open API.
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: SupplierCustomerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: SupplierCustomerHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+        "400":
+          description: bad input parameter
+  /promotions:
+    get:
+      operationId: GetPromotionsMethod
+      summary: "Find promotions"
+      description: "Endpoint that allows you to get the promotions list"
+      parameters:
+        - name: first
+          in: query
+          description: "Number of elements to be checked"
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+            format: int32
+        - name: after
+          in: query
+          description: Last evaluated key
+          required: false
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        timeoutInMillis: 29000
+        credentials:
+          Fn::ImportValue: PromotionHandlerInvokeRole
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PromotionHandler
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginationPromotionsResponse"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+    post:
+      operationId: PostCreatePromotions
+      summary: "Create or overwrite promotions (Asynchronous)."
+      description: "Creates promotions or overwrite the promotions if exists (Asynchronous)"
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: "request"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePromotionsRequest"
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PromotionHandlerInvokeRole
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PromotionHandler
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+    put:
+      operationId: PutPromotionsMethod
+      summary: "Edit promotions (Asynchronous)."
+      description: "Edit promotions (Asynchronous)."
+      requestBody:
+        description: "request"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePromotionsRequest"
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PromotionHandlerInvokeRole
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PromotionHandler
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /promotion/{PromotionId}:
+    get:
+      operationId: GetPromotionMethod
+      summary: "Get promotion detailed"
+      description: "Get promotion detailed"
+      parameters:
+        - in: path
+          name: PromotionId
+          description: PromotionId
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PromotionHandlerInvokeRole
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PromotionHandler
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromotionResponse"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+  /promotions/enable:
+    post:
+      operationId: EnablePromotionsMethod
+      summary: "Enable promotions (Asynchronous)."
+      description: "Enable promotions (Asynchronous)."
+      requestBody:
+        description: "request"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnableDisablePromotionsRequest"
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PromotionHandlerInvokeRole
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PromotionHandler
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /promotions/disable:
+    post:
+      operationId: DisablePromotionsMethod
+      summary: "Disable promotions (Asynchronous)."
+      description: "Disable promotions (Asynchronous)."
+      requestBody:
+        description: "request"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnableDisablePromotionsRequest"
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: PromotionHandlerInvokeRole
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: PromotionHandler
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        202:
+          description: "Accepted for processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSuccess"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        412:
+          description: "Duplicate request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+  /status/{uuid}:
+    get:
+      operationId: GetUuidStatus
+      description: Check the status of the Uuid in the Database.
+      parameters:
+        - in: path
+          name: uuid
+          description: Uuid parameter that is passed via swagger & API Gateway.
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: StatusUuidHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: StatusUuidHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusUuidResponse"
+        "400":
+          description: bad input parameter
+  /status/{uuid}/detail:
+    get:
+      operationId: GetUuidStatusDetail
+      description: Check the status of the Uuid Detail in the Database.
+      parameters:
+        - in: path
+          name: uuid
+          description: Uuid parameter that is passed via swagger & API Gateway.
+          required: true
+          schema:
+            type: string
+        - name: first
+          in: query
+          description: "Maximum number of elements"
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+            format: int32
+        - name: after
+          in: query
+          description: Last evaluated key
+          required: false
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      x-amazon-apigateway-request-validator: params-only
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: StatusUuidHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: StatusDetailUuidHandlerArn
+        timeoutInMillis: 29000
+        type: "aws_proxy"
+      responses:
+        "200":
+          description: A 200 response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusUuidPagedReponse"
+        "400":
+          description: bad input parameter
+
+  /resource/receipt:
+    post:
+      operationId: UploadReceiptFile
+      summary: "Upload receipt file"
+      description: "Upload receipt File"
+      parameters:
+        - in: header
+          name: Accept
+          schema:
+            type: string
+          required: false
+        - in: header
+          name: Content-Type
+          schema:
+            type: string
+          required: false
+      requestBody:
+        description: "request"
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/UploadReceiptFileObject"
+      x-amazon-apigateway-authorizer:
+        type: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        requestParameters:
+          integration.request.header.Accept: "method.request.header.Accept"
+          integration.request.header.Content-Type: "method.request.header.Content-Type"
+        credentials:
+          Fn::GetAtt: [ApiRole, Arn]
+        uri:
+          Fn::Sub:
+            - ${Uri}resource/receipt
+            - Uri:
+                Fn::FindInMap:
+                  - Config
+                  - Ref: EnvironmentStackName
+                  - WabiUri
+        timeoutInMillis: 29000
+        type: http_proxy
+        responses:
+          default:
+            statusCode: "200"
+      responses:
+        200:
+          description: "OK"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Bad Request"
+        500:
+          description: "Internal Server Error"
+      security:
+        - bearerAuth: []
+  /swagger-ui:
+    get:
+      operationId: "swaggerui"
+      responses:
+        "200":
+          description: "200 response"
+      security:
+        - emptyAuth: []
+      x-amazon-apigateway-request-validator: none
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: POST
+        credentials:
+          Fn::ImportValue: DocumentationHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: DocumentationHandlerArn
+        passthroughBehavior: "when_no_match"
+        timeoutInMillis: 29000
+
+  /{proxy+}:
+    get:
+      operationId: "doc"
+      parameters:
+        - in: path
+          name: proxy+
+          description: Proxy
+          required: false
+          schema:
+            type: string
+        - in: "header"
+          name: "Content-Type"
+          required: false
+          type: "string"
+        - in: "header"
+          name: "Accept"
+          required: false
+          type: "string"
+        - in: "header"
+          name: "Accept-Encoding"
+          required: false
+          type: "string"
+      responses:
+        "200":
+          description: "200 response"
+      x-amazon-apigateway-request-validator: none
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: "aws_proxy"
+        credentials:
+          Fn::ImportValue: DocumentationHandlerInvokeRoleArn
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: DocumentationHandlerArn
+        requestParameters:
+          integration.request.header.Accept: "method.request.header.Accept"
+          integration.request.header.Content-Type: "method.request.header.Content-Type"
+          integration.request.header.Accept-Encoding: "method.request.header.Accept-Encoding"
+        passthroughBehavior: "when_no_match"
+        timeoutInMillis: 29000
+components:
+  schemas:
+    EnableDisablePromotionsRequest:
+      type: array
+      items:
+        type: string
+
+    UpdatePromotionsRequest:
+      type: array
+      items:
+        $ref: "#/components/schemas/UpdatePromotionRequest"
+
+    UpdatePromotionRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        messages:
+          $ref: "#/components/schemas/PromotionMessages"
+        validity:
+          $ref: "#/components/schemas/PromotionValidity"
+        detail:
+          $ref: "#/components/schemas/PromotionDetailRequest"
+        target:
+          $ref: "#/components/schemas/PromotionTarget"
+        enabled:
+          type: boolean
+
+    CreatePromotionsRequest:
+      type: array
+      items:
+        $ref: "#/components/schemas/CreatePromotionRequest"
+
+    CreatePromotionRequest:
+      type: object
+      properties:
+        code:
+          type: string
+        messages:
+          $ref: "#/components/schemas/PromotionMessages"
+        validity:
+          $ref: "#/components/schemas/PromotionValidity"
+        detail:
+          $ref: "#/components/schemas/PromotionDetailRequest"
+        target:
+          $ref: "#/components/schemas/PromotionTarget"
+
+    PromotionDetailRequest:
+      type: object
+      properties:
+        discount:
+          $ref: "#/components/schemas/PromotionDiscountTargetRequest"
+        free:
+          $ref: "#/components/schemas/PromotionFreeTargetRequest"
+
+    PromotionDiscountTargetRequest:
+      type: object
+      properties:
+        progressive:
+          type: boolean
+        eans:
+          type: array
+          items:
+            type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/PromotionStepDiscount"
+        maxUnitsToUse:
+          type: integer
+          format: int64
+        maxUnitsPerStoreToUse:
+          type: integer
+          format: int64
+
+    PromotionFreeTargetRequest:
+      type: object
+      properties:
+        eans:
+          type: array
+          items:
+            type: string
+        step:
+          $ref: "#/components/schemas/PromotionStepFree"
+        maxUnitsTotalToGive:
+          type: integer
+          format: int64
+        maxUnitsPerStoreToGive:
+          type: integer
+          format: int64
+
+    PaginationPromotionsResponse:
+      type: object
+      properties:
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaginatorResponseEdge"
+        pageInfo:
+          $ref: "#/components/schemas/PageInfo"
+
+    PaginatorResponseEdge:
+      type: object
+      properties:
+        cursor:
+          $ref: "#/components/schemas/PageInfoCursor"
+        node:
+          $ref: "#/components/schemas/PromotionResponse"
+
+    PromotionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        countryId:
+          type: string
+        supplierId:
+          type: string
+        messages:
+          $ref: "#/components/schemas/PromotionMessages"
+        validity:
+          $ref: "#/components/schemas/PromotionValidity"
+        detail:
+          $ref: "#/components/schemas/PromotionDetailResponse"
+        target:
+          $ref: "#/components/schemas/PromotionTarget"
+        enabled:
+          type: boolean
+        active:
+          type: boolean
+
+    PromotionMessages:
+      type: object
+      properties:
+        description:
+          type: string
+
+    PromotionValidity:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+
+    PromotionDetailResponse:
+      type: object
+      properties:
+        discount:
+          $ref: "#/components/schemas/PromotionDiscountTargetResponse"
+        free:
+          $ref: "#/components/schemas/PromotionFreeTargetResponse"
+
+    PromotionTarget:
+      type: object
+      properties:
+        priceListCodes:
+          type: array
+          items:
+            type: string
+        customers:
+          type: array
+          items:
+            type: string
+
+    PromotionDiscountTargetResponse:
+      type: object
+      properties:
+        progressive:
+          type: boolean
+        eans:
+          type: array
+          items:
+            type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/PromotionStepDiscount"
+        maxUnitsTotalToUse:
+          type: integer
+          format: int64
+        sumUnitsTotalUsed:
+          type: integer
+          format: int64
+        maxUnitsPerCustomerToUse:
+          type: integer
+          format: int64
+
+    PromotionFreeTargetResponse:
+      type: object
+      properties:
+        eans:
+          type: array
+          items:
+            type: string
+        step:
+          $ref: "#/components/schemas/PromotionStepFree"
+        maxUnitsTotalToUse:
+          type: integer
+          format: int64
+        sumUnitsTotalUsed:
+          type: integer
+          format: int64
+        maxUnitsPerCustomerToUse:
+          type: integer
+          format: int64
+
+    PromotionStepDiscount:
+      type: object
+      properties:
+        quantity:
+          $ref: "#/components/schemas/PromotionQuantity"
+        display:
+          $ref: "#/components/schemas/PromotionDisplay"
+        discount:
+          $ref: "#/components/schemas/PromotionDiscount"
+
+    PromotionStepFree:
+      type: object
+      properties:
+        quantity:
+          $ref: "#/components/schemas/PromotionQuantity"
+        display:
+          $ref: "#/components/schemas/PromotionDisplay"
+        eanFree:
+          type: string
+        quantityFree:
+          type: integer
+          format: int64
+        displayFree:
+          $ref: "#/components/schemas/PromotionDisplay"
+
+    PromotionDetailFreeMaxUnits:
+      type: object
+      properties:
+        bought:
+          type: integer
+          format: int64
+        given:
+          type: integer
+          format: int64
+
+    PromotionDetailFreeSumUnitsResponse:
+      type: object
+      properties:
+        unitsBought:
+          type: integer
+          format: int64
+        unitsGiven:
+          type: integer
+          format: int64
+
+    PromotionQuantity:
+      type: object
+      properties:
+        min:
+          type: integer
+          format: int64
+        max:
+          type: integer
+          format: int64
+
+    PromotionDisplay:
+      type: object
+      properties:
+        units:
+          type: integer
+          format: int64
+
+    PromotionDiscount:
+      type: object
+      properties:
+        amount:
+          $ref: "#/components/schemas/PromotionDiscountType"
+        percentage:
+          $ref: "#/components/schemas/PromotionDiscountType"
+
+    PromotionDiscountType:
+      type: object
+      properties:
+        value:
+          type: integer
+          format: int64
+
+    AddCredits:
+      type: object
+      properties:
+        customer:
+          $ref: "#/components/schemas/CustomerIntegrationIdentification"
+        amount:
+          type: number
+
+    PaginatorSupplierResponse:
+      type: object
+      properties:
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplierEdgeOrderDetailResponse"
+        pageInfo:
+          $ref: "#/components/schemas/PageInfo"
+
+    SupplierEdgeOrderDetailResponse:
+      type: object
+      properties:
+        cursor:
+          $ref: "#/components/schemas/ConnectionCursor"
+        node:
+          $ref: "#/components/schemas/SupplierOrderDetailResponse"
+
+    ConnectionCursor:
+      type: object
+      properties:
+        value:
+          type: string
+
+    SupplierOrderDetailResponse:
+      type: object
+      properties:
+        address:
+          $ref: "#/components/schemas/AddressResponse"
+        buyer:
+          $ref: "#/components/schemas/CustomerResponse"
+        cancel_requested:
+          type: boolean
+        created:
+          type: string
+        customer_order_id:
+          type: integer
+          format: int64
+        estimated_shipping:
+          type: string
+        id:
+          type: integer
+          format: int64
+        payment:
+          $ref: "#/components/schemas/PaymentResponse"
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItemResponse"
+        shipped:
+          type: string
+        shipping_cost:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+            - PENDING
+            - CONFIRMED
+            - SHIPPED
+            - CANCELED
+        total:
+          type: integer
+          format: int64
+        units:
+          type: integer
+          format: int64
+        appliedPromotions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AppliedPromotion"
+      title: SupplierOrderDetailResponse
+
+    AppliedPromotion:
+      type: object
+      properties:
+        promotion:
+          $ref: "#/components/schemas/Promotion"
+        involvedCartItems:
+          type: array
+          items:
+            type: string
+
+    Promotion:
+      type: object
+      properties:
+        code:
+          type: string
+        id:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+
+    AddressResponse:
+      type: object
+      properties:
+        additional_info:
+          type: string
+        formatted_address:
+          type: string
+        postal_code:
+          type: string
+        shipping_preference:
+          type: array
+          items:
+            $ref: "#/components/schemas/ShippingPreference"
+      title: AddressResponse
+
+    CustomerResponse:
+      type: object
+      properties:
+        client_code:
+          type: string
+        email:
+          type: string
+        first_name:
+          type: string
+        id:
+          type: integer
+          format: int64
+        last_name:
+          type: string
+        legal_address:
+          $ref: "#/components/schemas/AddressResponse"
+        legal_id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        phone_alternative:
+          type: string
+      title: CustomerResponse
+
+    PaymentResponse:
+      type: object
+      properties:
+        wabipay:
+          "$ref": "#/components/schemas/WabiPayResponse"
+      title: PaymentResponse
+
+    OrderItemResponse:
+      type: object
+      properties:
+        ean:
+          type: string
+        id:
+          type: integer
+          format: int64
+        order_item_id:
+          type: integer
+          format: int64
+        partial_summary:
+          $ref: "#/components/schemas/PartialSummaryResponse"
+        price:
+          type: integer
+          format: int64
+        original_price:
+          type: integer
+          format: int64
+        price_list:
+          $ref: "#/components/schemas/PriceListResponse"
+        quantity:
+          type: integer
+          format: int64
+        title:
+          type: string
+        units:
+          type: integer
+          format: int64
+      title: OrderItemResponse
+
+    ShippingPreference:
+      type: object
+      properties:
+        FRIDAY:
+          type: string
+        MONDAY:
+          type: string
+        SATURDAY:
+          type: string
+        SUNDAY:
+          type: string
+        THURSDAY:
+          type: string
+        TUESDAY:
+          type: string
+        WEDNESDAY:
+          type: string
+      title: ShippingPreference
+
+    WabiPayResponse:
+      type: object
+      properties:
+        credits:
+          $ref: "#/components/schemas/MoneyResponse"
+        money:
+          $ref: "#/components/schemas/MoneyResponse"
+      title: WabiPayResponse
+
+    MoneyResponse:
+      type: object
+      properties:
+        customer_paid:
+          type: integer
+          format: int64
+        supplier_received:
+          type: integer
+          format: int64
+      title: MoneyResponse
+
+    PartialSummaryResponse:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          format: int64
+      title: PartialSummaryResponse
+
+    PriceListResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        price_list_code:
+          type: string
+      title: PriceListResponse
+
+    PageInfo:
+      type: object
+      properties:
+        hasNextPage:
+          type: boolean
+        hasPreviousPage:
+          type: boolean
+        startCursor:
+          $ref: "#/components/schemas/PageInfoCursor"
+        endCursor:
+          $ref: "#/components/schemas/PageInfoCursor"
+      title: PageInfo
+
+    PageInfoCursor:
+      type: object
+      properties:
+        value:
+          type: string
+      title: PageInfoCursor
+
+    ConfirmOrderRequest:
+      type: object
+      properties:
+        partialOrderItemSummaryList:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartialSummary"
+        shipAt:
+          type: string
+        supplierClientCode:
+          type: string
+        total:
+          type: string
+      title: ConfirmOrderRequest
+
+    PartialSummary:
+      type: object
+      properties:
+        orderItemId:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          format: int32
+      title: PartialSummary
+
+    CancelSupplierOrderRequest:
+      type: object
+      properties:
+        comment:
+          type: string
+        supplierCancelOptionReason:
+          type: string
+          enum:
+            - INCORRECT_PRICE
+            - INCORRECT_TAX
+            - CUSTOMER_CLOSED
+            - INSUFFICIENT_AMOUNT
+            - CUSTOMER_REGRET
+            - NO_STOCK
+            - STORE_OUTSIDE_COVERAGE_AREA
+            - OTHERS
+            - ACCEPT_CANCELED_ORDER
+      title: CancelSupplierOrderRequest
+
+    ShipOrderRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+        partialOrderItemSummaryList:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartialSummary"
+        receipts:
+          type: array
+          items:
+            type: string
+      title: ShipOrderRequest
+
+    UploadReceiptFileObject:
+      type: object
+      properties:
+        id:
+          type: string
+      title: UploadReceiptFileObject
+
+    SupplierProductResponse:
+      type: object
+      properties:
+        pageInfo:
+          $ref: "#/components/schemas/PageInfo"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/EdgeSupplierProduct"
+
+    EdgeSupplierProduct:
+      type: object
+      properties:
+        cursor:
+          $ref: "#/components/schemas/ConnectionCursor"
+        node:
+          $ref: "#/components/schemas/SupplierProduct"
+
+    SupplierProduct:
+      type: object
+      properties:
+        ean:
+          type: string
+        title:
+          type: string
+        displays:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupplierProductDisplay"
+
+    SupplierProductDisplay:
+      type: object
+      properties:
+        units:
+          type: integer
+        sku:
+          type: string
+
+    SupplierProductChangeRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        max_units:
+          type: integer
+          format: int64
+        min_units:
+          type: integer
+          format: int64
+        price:
+          type: number
+        price_list_code:
+          type: string
+        units:
+          type: integer
+          format: int64
+      title: SupplierProductChangeRequest
+
+    PriceListProductPriceRequest:
+      type: object
+      properties:
+        price_lists:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceListProductPrice"
+      title: PriceListProductPriceRequest
+
+    PriceListProductPrice:
+      type: object
+      properties:
+        price_list_code:
+          type: string
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductPrice"
+      title: PriceListProductPrice
+
+    ProductPrice:
+      type: object
+      properties:
+        ean:
+          type: string
+        enabled:
+          type: boolean
+        max_units:
+          type: integer
+          format: int64
+        min_units:
+          type: integer
+          format: int64
+        price:
+          type: number
+        units:
+          type: integer
+          format: int64
+      title: ProductPrice
+
+    ProductSkuRequest:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductSku"
+
+    ProductSku:
+      type: object
+      properties:
+        ean:
+          type: string
+        units:
+          type: integer
+          format: int64
+        sku:
+          type: string
+
+    SupplierProductToggleRequest:
+      type: object
+      properties:
+        price_list_code:
+          type: string
+          required: false
+        units:
+          type: integer
+          format: int64
+          required:
+            - true
+          default: 1
+
+    SuggestedOrder:
+      type: object
+      properties:
+        customerId:
+          type: integer
+          format: int64
+        id:
+          type: integer
+          format: int64
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SuggestedOrderItem"
+        lastUpdate:
+          type: string
+          format: date-time
+        readDate:
+          type: string
+          format: date-time
+        supplierName:
+          type: string
+      title: SuggestedOrder
+
+    SuggestedOrderItem:
+      type: object
+      properties:
+        categoryTitle:
+          type: string
+        productEan:
+          type: string
+        productImageId:
+          type: string
+        productTitle:
+          type: string
+        productUnits:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          format: int32
+      title: SuggestedOrderItem
+
+    SetSuggestOrderRequest:
+      type: object
+      properties:
+        customer:
+          $ref: "#/components/schemas/CustomerIntegrationIdentification"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SuggestOrderItemRequest"
+      title: SetSuggestOrderRequest
+
+    SuggestOrderItemRequest:
+      type: object
+      properties:
+        productEan:
+          type: string
+        productId:
+          type: integer
+          format: int64
+        productUnits:
+          type: integer
+          format: int32
+        quantity:
+          type: integer
+          format: int32
+      title: SuggestOrderItemRequest
+
+    Login:
+      type: object
+      properties:
+        client:
+          type: string
+        secret:
+          type: string
+
+    SupplierIntegrationPriceListRequest:
+      type: object
+      properties:
+        customerTypesCodes:
+          type: array
+          items:
+            type: string
+        customers:
+          type: array
+          items:
+            $ref: "#/components/schemas/CustomerIntegrationIdentification"
+        enabled:
+          type: boolean
+        name:
+          type: string
+      title: SupplierIntegrationPriceListRequest
+
+    CustomerGetPriceListResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        taxId:
+          type: string
+        supplierCode:
+          type: string
+        registered:
+          type: boolean
+      title: CustomerGetPriceListResponse
+
+    CustomerIntegrationIdentification:
+      type: object
+      properties:
+        id_type:
+          type: string
+          enum:
+            - ID
+            - SUPPLIER_CODE
+            - TAX_ID
+        value:
+          type: string
+      title: CustomerIntegrationIdentification
+
+    CreatePriceListResponse:
+      type: object
+      properties:
+        customer_types:
+          type: array
+          items:
+            $ref: "#/components/schemas/CustomerTypeResponse"
+        enabled:
+          type: boolean
+        id:
+          type: string
+        is_default:
+          type: boolean
+        name:
+          type: string
+        customers_found:
+          type: array
+          items:
+            $ref: "#/components/schemas/CustomerIntegrationIdentification"
+        customers_not_found:
+          type: array
+          items:
+            $ref: "#/components/schemas/CustomerIntegrationIdentification"
+        executionUuid:
+          type: string
+      title: CreatePriceListResponse
+
+    CustomerTypeResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+      title: CustomerTypeResponse
+
+    SupplierPriceListIntegrationResponse:
+      type: object
+      properties:
+        customer_types:
+          type: array
+          items:
+            $ref: "#/components/schemas/CustomerTypeIntegrationResponse"
+        customers:
+          type: array
+          items:
+            $ref: "#/components/schemas/CustomerGetPriceListResponse"
+        enabled:
+          type: boolean
+        price_list_code:
+          type: string
+        priceListId:
+          type: integer
+          format: int64
+        is_default:
+          type: boolean
+        name:
+          type: string
+      title: SupplierPriceListIntegrationResponse
+
+    CustomerTypeIntegrationResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+      title: CustomerTypeIntegrationResponse
+
+    ResponseSuccess:
+      type: object
+      properties:
+        uuid:
+          type: string
+
+    ResponseError:
+      type: object
+      properties:
+        uuid:
+          type: string
+        error:
+          type: string
+
+    StatusUuidPagedResponse:
+      type: object
+      properties:
+        pageInfo:
+          $ref: "#/components/schemas/PageInfo"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/EdgeStatusUuid"
+
+    EdgeStatusUuid:
+      type: object
+      properties:
+        cursor:
+          $ref: "#/components/schemas/ConnectionCursor"
+        node:
+          $ref: "#/components/schemas/ErrorInfo"
+
+    StatusUuidResponse:
+      type: object
+      properties:
+        uuid:
+          type: string
+        status:
+          type: string
+        createDate:
+          type: string
+        response:
+          type: string
+        error:
+          type: string
+        stats:
+          $ref: "#/components/schemas/Stats"
+
+    Stats:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+        processed:
+          type: integer
+          format: int64
+        error:
+          type: integer
+          format: int64
+
+    ErrorInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        reason:
+          type: string
+
+    StatusUuidPagedReponse:
+      type: object
+      properties:
+        pageInfo:
+          $ref: "#/components/schemas/PageInfo"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/EdgeStatusUuid"
+
+  securitySchemes:
+    bearerAuth:
+      type: "apiKey"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+      name: "Authorization"
+      in: "header"
+      description: "Put **_ONLY_** your JWT Bearer token on textbox below!"
+      x-amazon-apigateway-authtype: "custom"
+      x-amazon-apigateway-authorizer:
+        authorizerUri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::ImportValue: AuthorizerHandlerArn
+        authorizerCredentials:
+          Fn::GetAtt: [ApiRole, Arn]
+        authorizerResultTtlInSeconds: 300
+        identitySource: "method.request.header.Authorization"
+        type: "request"
+        authorizerPayloadFormatVersion: "2.0"
+        enableSimpleResponses: false
+
+    emptyAuth:
+      type: "apiKey"
+      name: "Authorization"
+      in: "stageVariable"
+      x-amazon-apigateway-authtype: "custom"
+      x-amazon-apigateway-authorizer:
+        authorizerUri:
+          Fn::Sub:
+            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+            - Region:
+                Fn::Sub: ${AWS::Region}
+              Arn:
+                Fn::Sub: ${StageAuthorizerHandler.Arn}
+        authorizerCredentials:
+          Fn::GetAtt: [ApiRole, Arn]
+        authorizerResultTtlInSeconds: 300
+        identitySource: "stageVariables.Authorization"
+        type: "request"
+        authorizerPayloadFormatVersion: "2.0"
+        enableSimpleResponses: false
+
+x-amazon-apigateway-binary-media-types:
+  - "multipart/form-data"
+
