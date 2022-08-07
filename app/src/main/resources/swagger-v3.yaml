@@ -118,13 +118,11 @@ paths:
         type: none
       x-amazon-apigateway-integration:
         httpMethod: POST
-        credentials:
-          Fn::ImportValue: OrderHandlerInvokeRoleArn
+
         uri:
             - Region:
                 Fn::Sub: ${AWS::Region}
-              Arn:
-                Fn::ImportValue: OrderHandlerArn
+
         timeoutInMillis: 29000
         type: "aws_proxy"
         responses:
@@ -162,13 +160,11 @@ paths:
         type: none
       x-amazon-apigateway-integration:
         httpMethod: POST
-        credentials:
-          Fn::ImportValue: OrderHandlerInvokeRoleArn
+
         uri:
             - Region:
                 Fn::Sub: ${AWS::Region}
-              Arn:
-                Fn::ImportValue: OrderHandlerArn
+
         timeoutInMillis: 29000
         type: "aws_proxy"
         responses:
@@ -259,15 +255,12 @@ paths:
       x-amazon-apigateway-integration:
         type: "aws_proxy"
         httpMethod: POST
-        credentials:
-          Fn::ImportValue: DocumentationHandlerInvokeRoleArn
+
         uri:
-          Fn::Sub:
-            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
+
             - Region:
                 Fn::Sub: ${AWS::Region}
-              Arn:
-                Fn::ImportValue: DocumentationHandlerArn
+
         passthroughBehavior: "when_no_match"
         timeoutInMillis: 29000
 
@@ -300,15 +293,6 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: POST
         type: "aws_proxy"
-        credentials:
-          Fn::ImportValue: DocumentationHandlerInvokeRoleArn
-        uri:
-          Fn::Sub:
-            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
-            - Region:
-                Fn::Sub: ${AWS::Region}
-              Arn:
-                Fn::ImportValue: DocumentationHandlerArn
         requestParameters:
           integration.request.header.Accept: "method.request.header.Accept"
           integration.request.header.Content-Type: "method.request.header.Content-Type"
@@ -1342,13 +1326,6 @@ components:
       description: "Put **_ONLY_** your JWT Bearer token on textbox below!"
       x-amazon-apigateway-authtype: "custom"
       x-amazon-apigateway-authorizer:
-        authorizerUri:
-          Fn::Sub:
-            - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
-            - Region:
-                Fn::Sub: ${AWS::Region}
-              Arn:
-                Fn::ImportValue: AuthorizerHandlerArn
         authorizerResultTtlInSeconds: 300
         identitySource: "method.request.header.Authorization"
         type: "request"
