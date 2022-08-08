@@ -42,11 +42,6 @@ Resources:
       Name: !Sub "${Stage}-${AppName}-api"
       StageName: !Ref Stage
       TracingEnabled: true
-      DefinitionBody:
-         Fn::Transform:
-           Name: AWS::Include
-           Parameters:
-             Location: ./app/src/main/resources/swagger-v3.yaml
 
   UserFunction:
     Type: 'AWS::Serverless::Function'
