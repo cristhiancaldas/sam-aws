@@ -2,68 +2,12 @@ openapi: 3.0.0
 info:
   version: 1.0.0
   title: supplier-integration-api
-x-amazon-apigateway-request-validators:
-  all:
-    validateRequestBody: true
-    validateRequestParameters: true
-  params-only:
-    validateRequestBody: false
-    validateRequestParameters: true
-  body:
-    validateRequestBody: true
-    validateRequestParameters: false
-  none:
-    validateRequestBody: false
-    validateRequestParameters: false
 paths:
   /user:
     get:
       operationId: UserFunction
       summary: "Find order"
       description: "Find order"
-      parameters:
-        - name: from
-          in: query
-          description: "Optional to date value: Format [YYYY-MM-DD (HH:MM:SS)], if full detail is selected HH:MM:SS is mandatory"
-          required: false
-          schema:
-            type: string
-        - name: first
-          in: query
-          description: "Maximum number of elements"
-          required: false
-          schema:
-            type: integer
-            default: 50
-            maximum: 100
-            format: int32
-        - name: status
-          in: query
-          description: "Filter by the status order"
-          required: false
-          schema:
-            type: string
-        - name: to
-          in: query
-          description: "Optional to date value: Format [YYYY-MM-DD (HH:MM:SS)], if full detail is selected HH:MM:SS is mandatory"
-          required: false
-          schema:
-            type: string
-        - name: full_detail
-          in: query
-          description: Show full detail order
-          required: true
-          schema:
-            type: boolean
-            default: false
-        - name: after
-          in: query
-          description: Last evaluated key
-          required: false
-          schema:
-            type: string
-      x-amazon-apigateway-authorizer:
-        type: none
       x-amazon-apigateway-integration:
         httpMethod: POST
         uri:
