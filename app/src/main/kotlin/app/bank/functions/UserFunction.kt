@@ -17,7 +17,10 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class UserFunction : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+class UserFunction(
+    private val userCreator: UserCreator = UserCreator.instance,
+    private val userReader : UserReader  = UserReader.instance
+) : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private val log by LoggerDelegate()
 
@@ -49,17 +52,17 @@ class UserFunction : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxy
         when (event.httpMethod) {
             "GET" -> getValidate()
             else -> methodNotAllowed()
-        }
+         }
 
     private fun getUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
         val id = event.queryStringParameters["id"]!!
-        val user = UserReader.instance.run(id.toLong())
+        val user = userReader.run(id.toLong())
         return ok(Json.encodeToString(user))
     }
 
     private fun addUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
         val userDto = UserDto.from(event.body)
-        var user = UserCreator.instance.run(userDto)
+        val user = userCreator.run(userDto)
         return created(Json.encodeToString(user))
     }
 
