@@ -19,7 +19,6 @@ Globals:
     Runtime: java11
     Timeout: 60
     MemorySize: 512
-    ReservedConcurrentExecutions: 30
 
 Resources:
 
