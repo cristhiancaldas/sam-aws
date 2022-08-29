@@ -49,7 +49,6 @@ Resources:
     Properties:
       FunctionName: UserFunctionApp
       CodeUri: "app"
-      AutoPublishAlias: live
       Handler: app.bank.functions.UserFunction::handleRequest
       Policies:
         - DynamoDBCrudPolicy:
