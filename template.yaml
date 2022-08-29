@@ -4,7 +4,7 @@ Transform: 'AWS::Serverless-2016-10-31'
 Parameters:
   Stage:
     Type: String
-    Description: Stage name to deploy resources to
+    Description: Stage name to deploy resources to demo
     AllowedValues:
       - dev
       - qa
