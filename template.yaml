@@ -19,6 +19,7 @@ Globals:
     Runtime: java11
     Timeout: 60
     MemorySize: 512
+    AutoPublishAlias: live
     ReservedConcurrentExecutions: 30
     ProvisionedConcurrencyConfig:
         ProvisionedConcurrentExecutions: 15
