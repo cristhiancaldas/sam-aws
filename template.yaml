@@ -20,6 +20,8 @@ Globals:
     Timeout: 60
     MemorySize: 512
     ReservedConcurrentExecutions: 30
+    ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 15
 
 Resources:
 
