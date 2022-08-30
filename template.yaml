@@ -20,7 +20,7 @@ Globals:
     Timeout: 60
     MemorySize: 512
     AutoPublishAlias: live
-    ReservedConcurrentExecutions: 30
+    ReservedConcurrentExecutions: 32
 
 Resources:
 
