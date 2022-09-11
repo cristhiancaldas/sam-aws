@@ -34,7 +34,7 @@ class UserFunction(
     }
 
     private fun handlerEvent(event: APIGatewayProxyRequestEvent) =
-        when (event.resource) {
+        when (RestPaths.getPath(event.resource)) {
             RestPaths.USER -> getFilter(event)
             RestPaths.VALIDATE -> getFilterValidate(event)
             else -> {

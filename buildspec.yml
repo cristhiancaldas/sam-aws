@@ -3,6 +3,11 @@ phases:
   install:
     runtime-versions:
       java: corretto17
+  pre_build:
+    commands:
+      - echo "Ejecutando Test"
+      - ./gradlew build
+      - ./gradlew test
   build:
     commands:
       - echo start build

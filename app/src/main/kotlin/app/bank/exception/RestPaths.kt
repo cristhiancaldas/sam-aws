@@ -1,6 +1,13 @@
 package app.bank.exception
 
-object RestPaths {
-    const val USER = "/user"
-    const val VALIDATE = "/validate"
+import com.jayway.jsonpath.PathNotFoundException
+
+enum class RestPaths(val path: String){
+    USER("/user"),
+    VALIDATE("/validate");
+    companion object {
+        fun checkPathExists(path: String) = getPath(path) ?: throw PathNotFoundException(path)
+
+        fun getPath(path: String): RestPaths? = values().find { it.path == path }
+    }
 }
