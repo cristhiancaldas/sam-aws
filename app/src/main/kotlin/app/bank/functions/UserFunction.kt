@@ -1,6 +1,5 @@
 package app.bank.functions
 
-import app.bank.common.created
 import app.bank.common.methodNotAllowed
 import app.bank.common.notFound
 import app.bank.common.ok
@@ -80,7 +79,7 @@ class UserFunction(
     private fun addUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
         val userDto = UserDto.from(event.body)
         val user = userCreator.run(userDto)
-        return created(Json.encodeToString(user))
+        return ok(Json.encodeToString(user))
     }
 
     private fun getValidate(): APIGatewayProxyResponseEvent {

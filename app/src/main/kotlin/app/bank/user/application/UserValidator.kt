@@ -14,7 +14,7 @@ class UserValidator {
     }
     fun validatorEmail(userDto: UserDto) {
         userDto.email.let {
-            if (it.isNotBlank() && Constants.VALIDATE_PATTERN_EMAIL.toRegex().matches(it)) {
+            if (it.isNotBlank() && !Constants.VALIDATE_PATTERN_EMAIL.toRegex().matches(it)) {
                 log.info("validate email : ${userDto.email}")
                 throw ValidationException(KeyException.INVALID_FORMAT_EMAIL.name)
             }
