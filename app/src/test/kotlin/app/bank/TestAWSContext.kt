@@ -5,7 +5,7 @@ import com.amazonaws.services.lambda.runtime.CognitoIdentity
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.LambdaLogger
 
-class TestAWSContext(private val functionName: String): Context {
+class TestAWSContext(private val functionName: String) : Context {
     override fun getAwsRequestId(): String {
         return ""
     }
@@ -53,7 +53,6 @@ class TestAWSContext(private val functionName: String): Context {
         override fun log(message: String?) {}
 
         override fun log(message: ByteArray?) {}
-
     }
     class TestCognitoIdentity : CognitoIdentity {
         override fun getIdentityId(): String {
@@ -63,6 +62,5 @@ class TestAWSContext(private val functionName: String): Context {
         override fun getIdentityPoolId(): String {
             TODO("Not yet implemented")
         }
-
     }
 }
