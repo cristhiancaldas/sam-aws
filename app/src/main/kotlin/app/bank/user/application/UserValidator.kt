@@ -12,7 +12,6 @@ class UserValidator {
     companion object {
         val instance = UserValidator()
     }
-
     fun validatorEmail(userDto: UserDto) {
         userDto.email.let {
             if (it.isNotBlank() && Constants.VALIDATE_PATTERN_EMAIL.toRegex().matches(it)) {
