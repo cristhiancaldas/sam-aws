@@ -62,8 +62,6 @@ dependencies {
     testImplementation("io.mockk:mockk:1.9.3")
 // Kotlin Coroutines Test
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
-    testImplementation("org.testcontainers:testcontainers:1.15.3")
-
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

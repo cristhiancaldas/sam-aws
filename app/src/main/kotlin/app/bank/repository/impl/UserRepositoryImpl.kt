@@ -36,7 +36,7 @@ class UserRepositoryImpl(
             ddbMapper.save<User>(user)
             return user
         } catch (ex: Exception) {
-           throw SaveUserException(ex.message)
+            throw SaveUserException(ex.message)
         }
     }
 }

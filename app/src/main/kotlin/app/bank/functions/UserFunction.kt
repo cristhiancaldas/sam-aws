@@ -7,6 +7,8 @@ import app.bank.common.ok
 import app.bank.config.LoggerDelegate
 import app.bank.exception.HttpExceptionHandler
 import app.bank.exception.RestPaths
+import app.bank.exception.RestPaths.USER
+import app.bank.exception.RestPaths.VALIDATE
 import app.bank.shared.UserDto
 import app.bank.user.application.UserCreator
 import app.bank.user.application.UserReader
@@ -19,7 +21,7 @@ import kotlinx.serialization.json.Json
 
 class UserFunction(
     private val userCreator: UserCreator = UserCreator.instance,
-    private val userReader : UserReader  = UserReader.instance
+    private val userReader: UserReader = UserReader.instance
 ) : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private val log by LoggerDelegate()
@@ -34,30 +36,45 @@ class UserFunction(
     }
 
     private fun handlerEvent(event: APIGatewayProxyRequestEvent) =
+        when (event.httpMethod) {
+            "GET" -> doGet(event)
+            "POST" -> doPost(event)
+            else -> methodNotAllowed()
+        }
+
+    private fun doPut(event: APIGatewayProxyRequestEvent) =
         when (RestPaths.getPath(event.resource)) {
-            RestPaths.USER -> getFilter(event)
-            RestPaths.VALIDATE -> getFilterValidate(event)
+            USER -> updateUser(event)
             else -> {
                 notFound(event.path + "" + event.resource)
             }
         }
 
-    private fun getFilter(event: APIGatewayProxyRequestEvent) =
-        when (event.httpMethod) {
-            "GET" -> getUser(event)
-            "POST" -> addUser(event)
-            else -> methodNotAllowed()
+    private fun doGet(event: APIGatewayProxyRequestEvent) =
+        when (RestPaths.getPath(event.resource)) {
+            USER -> getUser(event)
+            VALIDATE -> getValidate()
+            else -> {
+                notFound(event.path + "" + event.resource)
+            }
         }
-    private fun getFilterValidate(event: APIGatewayProxyRequestEvent) =
-        when (event.httpMethod) {
-            "GET" -> getValidate()
-            else -> methodNotAllowed()
-         }
+
+    private fun doPost(event: APIGatewayProxyRequestEvent) =
+        when (RestPaths.getPath(event.resource)) {
+            USER -> addUser(event)
+            else -> {
+                notFound(event.path + "" + event.resource)
+            }
+        }
 
     private fun getUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
-        val id = event.queryStringParameters["id"]!!
-        val user = userReader.run(id.toLong())
+        val id = event.queryStringParameters?.let { event.queryStringParameters["id"] }
+        val user = userReader.run(id!!.toLong())
         return ok(Json.encodeToString(user))
+    }
+
+    private fun updateUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
+        return ok()
     }
 
     private fun addUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {

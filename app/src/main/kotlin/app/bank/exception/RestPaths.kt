@@ -2,7 +2,7 @@ package app.bank.exception
 
 import com.jayway.jsonpath.PathNotFoundException
 
-enum class RestPaths(val path: String){
+enum class RestPaths(val path: String) {
     USER("/user"),
     VALIDATE("/validate");
     companion object {

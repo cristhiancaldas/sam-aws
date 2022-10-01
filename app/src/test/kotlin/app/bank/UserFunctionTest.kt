@@ -1,5 +1,4 @@
 package app.bank
-
 import app.bank.bean.User
 import app.bank.exception.RestPaths
 import app.bank.functions.UserFunction
@@ -12,7 +11,6 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -28,7 +26,7 @@ internal class UserFunctionTest {
         mockkObject(UserCreator.Companion)
         every { UserCreator.Companion.instance } answers { userCreator }
 
-        val userDTO= Json.encodeToString(userDTOTest())
+        val userDTO = Json.encodeToString(userDTOTest())
         every { userCreator.run(any()) } answers { User(id = 95874) }
         val apiGateway = APIGatewayProxyRequestEvent()
         apiGateway.body = userDTO
@@ -38,7 +36,6 @@ internal class UserFunctionTest {
         apiGateway.requestContext = APIGatewayProxyRequestEvent.ProxyRequestContext()
         val handle = userFunction.handleRequest(apiGateway, TestAWSContext("UserFunction"))
         assertEquals(201, handle.statusCode)
-
     }
 
     private fun userDTOTest(): UserDto {
@@ -46,7 +43,7 @@ internal class UserFunctionTest {
             id = 859,
             firstName = "Cristhian",
             lastName = "Caldas Mendoza",
-            email = "c.caldas.m@gmail.com",
+            email = "c.caldas..com",
             phone = "985471258",
             country = "PERU",
             region = "Lima"
