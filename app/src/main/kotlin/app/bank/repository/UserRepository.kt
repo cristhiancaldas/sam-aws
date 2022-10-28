@@ -6,7 +6,9 @@ interface UserRepository {
 
     fun getUser(id: Long): User
 
-    fun save(user: User): User?
+    fun save(user: User): User
+
+    fun getUsers(): List<User>
 }
 
 class UserNotFoundException(msg: Long?) : RuntimeException("User could not be found : $msg")

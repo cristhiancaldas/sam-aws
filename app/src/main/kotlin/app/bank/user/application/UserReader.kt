@@ -10,7 +10,11 @@ class UserReader(
     companion object {
         val instance: UserReader = UserReader(UserRepositoryImpl.instance)
     }
-    fun run(idUser: Long): User {
+    fun getUser(idUser: Long): User {
         return userOpsRepository.getUser(idUser)
+    }
+
+    fun getUsers(): List<User> {
+        return userOpsRepository.getUsers()
     }
 }

@@ -6,8 +6,7 @@ import app.bank.common.ok
 import app.bank.config.LoggerDelegate
 import app.bank.exception.HttpExceptionHandler
 import app.bank.exception.RestPaths
-import app.bank.exception.RestPaths.USER
-import app.bank.exception.RestPaths.VALIDATE
+import app.bank.exception.RestPaths.*
 import app.bank.shared.UserDto
 import app.bank.user.application.UserCreator
 import app.bank.user.application.UserReader
@@ -21,7 +20,7 @@ import kotlinx.serialization.json.Json
 class UserFunction(
     private val userCreator: UserCreator = UserCreator.instance,
     private val userReader: UserReader = UserReader.instance
-) : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+) : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>, BaseFunction() {
 
     private val log by LoggerDelegate()
 
@@ -43,7 +42,7 @@ class UserFunction(
 
     private fun doPut(event: APIGatewayProxyRequestEvent) =
         when (RestPaths.getPath(event.resource)) {
-            USER -> updateUser(event)
+            EDIT_USER -> updateUser(event)
             else -> {
                 notFound(event.path + "" + event.resource)
             }
@@ -51,8 +50,9 @@ class UserFunction(
 
     private fun doGet(event: APIGatewayProxyRequestEvent) =
         when (RestPaths.getPath(event.resource)) {
-            USER -> getUser(event)
-            VALIDATE -> getValidate()
+            GET_USER -> getUser(event)
+            LIST_USERS -> getUsers()
+            VALIDATE -> getValidate(event)
             else -> {
                 notFound(event.path + "" + event.resource)
             }
@@ -60,15 +60,20 @@ class UserFunction(
 
     private fun doPost(event: APIGatewayProxyRequestEvent) =
         when (RestPaths.getPath(event.resource)) {
-            USER -> addUser(event)
+            ADD_USER -> addUser(event)
             else -> {
                 notFound(event.path + "" + event.resource)
             }
         }
 
+    private fun getUsers(): APIGatewayProxyResponseEvent {
+        val user = userReader.getUsers()
+        return ok(Json.encodeToString(user))
+    }
+
     private fun getUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
-        val id = event.queryStringParameters?.let { event.queryStringParameters["id"] }
-        val user = userReader.run(id!!.toLong())
+        val id = getQueryParameterValue<Long>(event, "id")
+        val user = userReader.getUser(id)
         return ok(Json.encodeToString(user))
     }
 
@@ -82,8 +87,9 @@ class UserFunction(
         return ok(Json.encodeToString(user))
     }
 
-    private fun getValidate(): APIGatewayProxyResponseEvent {
-        val message = "Service Operative - 2022 - Prod"
+    private fun getValidate(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
+        val messages = getPathParameterValue<String>(event, "messages")
+        val message = "Service Operative - 2022 - $messages"
         return ok(message)
     }
 }

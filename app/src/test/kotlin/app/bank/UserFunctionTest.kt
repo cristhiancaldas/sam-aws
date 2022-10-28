@@ -30,8 +30,8 @@ internal class UserFunctionTest {
         every { userCreator.run(any()) } answers { User(id = 95874) }
         val apiGateway = APIGatewayProxyRequestEvent()
         apiGateway.body = userDTO
-        apiGateway.resource = RestPaths.USER.path
-        apiGateway.path = RestPaths.USER.path
+        apiGateway.resource = RestPaths.ADD_USER.path
+        apiGateway.path = RestPaths.ADD_USER.path
         apiGateway.httpMethod = "POST"
         apiGateway.requestContext = APIGatewayProxyRequestEvent.ProxyRequestContext()
         val handle = userFunction.handleRequest(apiGateway, TestAWSContext("UserFunction"))

@@ -94,6 +94,7 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     verbose.set(false)
     android.set(false)
     ignoreFailures.set(true)
+    disabledRules.set(setOf("no-wildcard-imports", "import-ordering", "no-unused-imports", "max-line-length"))
     filter {
         exclude { element -> element.file.path.contains("generated/") }
         include("**/kotlin/**")

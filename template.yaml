@@ -78,7 +78,7 @@ Resources:
               Ref: ApiGatewayApi
 
 Outputs:
-  MyApi:
+  MyURLRest:
     Description: "API Gateway endpoint URL"
     Value: !Sub "https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
 

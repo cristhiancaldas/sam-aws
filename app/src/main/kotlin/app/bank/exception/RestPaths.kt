@@ -3,7 +3,10 @@ package app.bank.exception
 import com.jayway.jsonpath.PathNotFoundException
 
 enum class RestPaths(val path: String) {
-    USER("/user"),
+    GET_USER("/user/{id}"),
+    EDIT_USER("/user/{id}"),
+    ADD_USER("/user"),
+    LIST_USERS("/user"),
     VALIDATE("/validate");
     companion object {
         fun checkPathExists(path: String) = getPath(path) ?: throw PathNotFoundException(path)

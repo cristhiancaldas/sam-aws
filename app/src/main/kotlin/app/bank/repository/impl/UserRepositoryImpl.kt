@@ -8,6 +8,7 @@ import app.bank.repository.UserNotFoundException
 import app.bank.repository.UserRepository
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression
 
 class UserRepositoryImpl(
     ddbClient: AmazonDynamoDB
@@ -30,7 +31,7 @@ class UserRepositoryImpl(
         }
     }
 
-    override fun save(user: User): User? {
+    override fun save(user: User): User {
         try {
             log.info("fun saveUser")
             ddbMapper.save<User>(user)
@@ -38,5 +39,10 @@ class UserRepositoryImpl(
         } catch (ex: Exception) {
             throw SaveUserException(ex.message)
         }
+    }
+
+    override fun getUsers(): List<User> {
+        val request = DynamoDBScanExpression()
+       return ddbMapper.scan(User::class.java, request)
     }
 }
