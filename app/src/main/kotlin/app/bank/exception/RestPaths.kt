@@ -7,7 +7,7 @@ enum class RestPaths(val path: String) {
     EDIT_USER("/user/{id}"),
     ADD_USER("/user"),
     LIST_USERS("/user"),
-    VALIDATE("/validate");
+    VALIDATE("/validate/{msg}");
     companion object {
         fun checkPathExists(path: String) = getPath(path) ?: throw PathNotFoundException(path)
 

@@ -74,7 +74,7 @@ class UserFunction(
     private fun getUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
         val id = event.pathParameters["id"]!!
         val user = userReader.getUser(id.toLong())
-        return ok(Json.encodeToString(user))
+        return ok(Json{ encodeDefaults=true}.encodeToString(user))
     }
 
     private fun updateUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
@@ -88,7 +88,7 @@ class UserFunction(
     }
 
     private fun getValidate(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
-        val messages = event.pathParameters["messages"]!!
+        val messages = event.pathParameters["msg"]!!
         val message = "Service Operative - 2022 - $messages"
         return ok(message)
     }
