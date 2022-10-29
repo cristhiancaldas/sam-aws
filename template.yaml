@@ -59,7 +59,7 @@ Resources:
           Type: Api
           Properties:
             Method: GET
-            Path: /user
+            Path: /user/{id}
             RestApiId:
               Ref: ApiGatewayApi
         AddUser:
@@ -73,7 +73,7 @@ Resources:
           Type: Api
           Properties:
             Method: GET
-            Path: /validate
+            Path: /validate/{msg}
             RestApiId:
               Ref: ApiGatewayApi
 
