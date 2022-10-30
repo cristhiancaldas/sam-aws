@@ -7,7 +7,6 @@ phases:
     commands:
       - echo "Ejecutando Test"
       - ./gradlew build
-      - ./gradlew test
   build:
     commands:
       - echo start build
