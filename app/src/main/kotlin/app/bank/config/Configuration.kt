@@ -21,9 +21,9 @@ object Configuration {
 
     private fun initDdbClient() {
         ddbClient = AmazonDynamoDBClientBuilder.standard().build()
-        if (isEnabledDbMigration()) {
-            runChangeSets()
-        }
+        //if (isEnabledDbMigration()) {
+          //  runChangeSets()
+       // }
     }
     private fun runChangeSets() {
         val runner = Dynamobee(ddbClient)

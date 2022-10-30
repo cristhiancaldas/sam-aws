@@ -11,7 +11,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression
 
 class UserRepositoryImpl(
-    ddbClient: AmazonDynamoDB
+ private val ddbClient: AmazonDynamoDB
 ) : UserRepository {
 
     private val ddbMapper = DynamoDBMapper(ddbClient)
