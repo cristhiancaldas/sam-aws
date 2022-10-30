@@ -13,24 +13,24 @@ import com.github.dynamobee.changeset.ChangeSet
 @ChangeLog
 class DatabaseChangelog {
 
-     @ChangeSet(order = "001", id = "add_active_values", author = "ccalda@gmail.com")
-     fun addActiveValues(dbClient: AmazonDynamoDB){
-         val dbMapper = DynamoDBMapper(dbClient)
-         val newActiveValue = "1"
+    @ChangeSet(order = "001", id = "add_active_values", author = "ccalda@gmail.com")
+    fun addActiveValues(dbClient: AmazonDynamoDB) {
+        val dbMapper = DynamoDBMapper(dbClient)
+        val newActiveValue = "1"
 
-         val users = dbMapper.scan(
-             User::class.java,
-             DynamoDBScanExpression().withProjectionExpression("ID_USER_PK")
-         )
+        val users = dbMapper.scan(
+            User::class.java,
+            DynamoDBScanExpression().withProjectionExpression("ID_USER_PK")
+        )
 
-         users.forEach {
-             dbClient.updateItem(
-                 UpdateItemRequest()
-                     .withTableName(Configuration.TABLE_NAME)
-                     .withKey(mapOf("ID_USER_PK" to AttributeValue().withN(it.id.toString())))
-                     .withUpdateExpression("SET ACTIVE = :activeValue")
-                     .withExpressionAttributeValues(mapOf(":activeValue" to AttributeValue().withS(newActiveValue)))
-             )
-         }
-     }
+        users.forEach {
+            dbClient.updateItem(
+                UpdateItemRequest()
+                    .withTableName(Configuration.TABLE_NAME)
+                    .withKey(mapOf("ID_USER_PK" to AttributeValue().withN(it.id.toString())))
+                    .withUpdateExpression("SET ACTIVE = :activeValue")
+                    .withExpressionAttributeValues(mapOf(":activeValue" to AttributeValue().withS(newActiveValue)))
+            )
+        }
+    }
 }

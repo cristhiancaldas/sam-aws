@@ -35,7 +35,7 @@ internal class UserFunctionTest {
         apiGateway.httpMethod = "POST"
         apiGateway.requestContext = APIGatewayProxyRequestEvent.ProxyRequestContext()
         val handle = userFunction.handleRequest(apiGateway, TestAWSContext("UserFunction"))
-        assertEquals(200, handle.statusCode)
+        assertEquals(201, handle.statusCode)
     }
 
     private fun userDTOTest(): UserDto {

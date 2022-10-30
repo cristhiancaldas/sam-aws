@@ -21,13 +21,13 @@ object Configuration {
 
     private fun initDdbClient() {
         ddbClient = AmazonDynamoDBClientBuilder.standard().build()
-        if(isEnabledDbMigration()){
+        if (isEnabledDbMigration()) {
             runChangeSets()
         }
     }
-    private fun runChangeSets(){
+    private fun runChangeSets() {
         val runner = Dynamobee(ddbClient)
-        runner.setChangelogTableName("${TABLE_NAME}-DBCHANGELOG")
+        runner.setChangelogTableName("$TABLE_NAME-DBCHANGELOG")
         runner.setChangeLogsScanPackage("app.bank.dbchangelogs")
         runner.execute()
     }
@@ -45,5 +45,4 @@ object Configuration {
         }
         return value
     }
-
 }

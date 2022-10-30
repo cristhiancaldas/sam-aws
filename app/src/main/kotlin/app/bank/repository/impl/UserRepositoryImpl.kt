@@ -43,6 +43,6 @@ class UserRepositoryImpl(
 
     override fun getUsers(): List<User> {
         val request = DynamoDBScanExpression().withProjectionExpression("ID_USER_PK,FIRST_NAME,LAST_NAME")
-       return ddbMapper.scan(User::class.java, request)
+        return ddbMapper.scan(User::class.java, request)
     }
 }

@@ -34,5 +34,4 @@ data class User(
     @DynamoDBAttribute(attributeName = "ACTIVE")
     var active: String = "1"
 
-
 )

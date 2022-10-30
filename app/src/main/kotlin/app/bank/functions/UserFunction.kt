@@ -77,7 +77,7 @@ class UserFunction(
     private fun getUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
         val id = event.pathParameters["id"]!!
         val user = userReader.getUser(id.toLong())
-        return ok(Json{ encodeDefaults=true}.encodeToString(user))
+        return ok(Json { encodeDefaults = true }.encodeToString(user))
     }
 
     private fun updateUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
@@ -86,7 +86,7 @@ class UserFunction(
 
     private fun addUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
 
-        val userDto = Json{ ignoreUnknownKeys = true}.decodeFromString<UserDto>(event.body)
+        val userDto = Json { ignoreUnknownKeys = true }.decodeFromString<UserDto>(event.body)
         val user = UserConverter.instance.convert(userDto)
         userCreator.run(user)
         return created()

@@ -20,7 +20,6 @@ repositories {
 
 dependencies {
 
-
     implementation("org.springdoc:springdoc-openapi-data-rest:1.6.0")
     implementation("org.springdoc:springdoc-openapi-ui:1.6.0")
     implementation("org.springdoc:springdoc-openapi-kotlin:1.6.0")
@@ -101,4 +100,7 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
         exclude { element -> element.file.path.contains("generated/") }
         include("**/kotlin/**")
     }
+}
+tasks.withType<Test> {
+    environment("DB_MIGRATION", false)
 }
