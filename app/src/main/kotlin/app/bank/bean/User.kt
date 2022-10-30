@@ -29,6 +29,10 @@ data class User(
     var country: String = "",
 
     @DynamoDBAttribute(attributeName = "REGION")
-    var region: String = ""
+    var region: String = "",
+
+    @DynamoDBAttribute(attributeName = "ACTIVE")
+    var active: String = "1"
+
 
 )

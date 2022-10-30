@@ -60,6 +60,8 @@ dependencies {
     testImplementation("org.mockito:mockito-inline:3.4.4")
     testImplementation("junit:junit")
     testImplementation("io.mockk:mockk:1.9.3")
+    implementation("com.github.dynamobee:dynamobee:0.6")
+
 // Kotlin Coroutines Test
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
 }

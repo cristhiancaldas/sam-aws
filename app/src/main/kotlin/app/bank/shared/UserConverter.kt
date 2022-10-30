@@ -4,6 +4,7 @@ import app.bank.bean.User
 
 class UserConverter {
 
+    private val ACTIVE= "1"
     companion object {
         val instance = UserConverter()
     }
@@ -16,7 +17,9 @@ class UserConverter {
             email = from.email,
             phone = from.phone,
             country = from.country,
-            region = from.region
+            region = from.region,
+            active = ACTIVE
+
         )
     }
 }

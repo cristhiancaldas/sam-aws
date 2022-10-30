@@ -21,6 +21,9 @@ Globals:
     MemorySize: 512
     AutoPublishAlias: live
     ReservedConcurrentExecutions: 30
+    Environment:
+        Variables:
+            DB_MIGRATION: false
 
 Resources:
 

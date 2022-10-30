@@ -1,5 +1,6 @@
 package app.bank.functions
 
+import app.bank.common.created
 import app.bank.common.methodNotAllowed
 import app.bank.common.notFound
 import app.bank.common.ok
@@ -7,6 +8,7 @@ import app.bank.config.LoggerDelegate
 import app.bank.exception.HttpExceptionHandler
 import app.bank.exception.RestPaths
 import app.bank.exception.RestPaths.*
+import app.bank.shared.UserConverter
 import app.bank.shared.UserDto
 import app.bank.user.application.UserCreator
 import app.bank.user.application.UserReader
@@ -14,6 +16,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -82,9 +85,11 @@ class UserFunction(
     }
 
     private fun addUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
-        val userDto = UserDto.from(event.body)
-        val user = userCreator.run(userDto)
-        return ok(Json.encodeToString(user))
+
+        val userDto = Json{ ignoreUnknownKeys = true}.decodeFromString<UserDto>(event.body)
+        val user = UserConverter.instance.convert(userDto)
+        userCreator.run(user)
+        return created()
     }
 
     private fun getValidate(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
