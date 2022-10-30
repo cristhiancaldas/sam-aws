@@ -43,7 +43,7 @@ internal class UserFunctionTest {
             id = 859,
             firstName = "Cristhian",
             lastName = "Caldas Mendoza",
-            email = "c.caldas..com",
+            email = "c.caldas.m@gmail.com",
             phone = "985471258",
             country = "PERU",
             region = "Lima"
