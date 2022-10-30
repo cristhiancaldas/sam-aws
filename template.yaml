@@ -41,6 +41,21 @@ Resources:
         -   AttributeName: ID_USER_PK
             KeyType: HASH
 
+  UserOpsDbChangeLogDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      TableName: "USER_OPS_DBCHANGELOG"
+      AttributeDefinitions:
+        - AttributeName: changeId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: changeId
+          KeyType: HASH
+
+
   ApiGatewayApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -57,6 +72,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserDynamoTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserOpsDbChangeLogDynamoTable
       Events:
         GetUser:
           Type: Api
