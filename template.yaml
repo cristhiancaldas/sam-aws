@@ -82,6 +82,13 @@ Resources:
             Path: /user/{id}
             RestApiId:
               Ref: ApiGatewayApi
+        GetUsers:
+          Type: Api
+          Properties:
+            Method: GET
+            Path: /user
+            RestApiId:
+              Ref: ApiGatewayApi
         AddUser:
           Type: Api
           Properties:
