@@ -1,6 +1,7 @@
 package app.bank.repository
 
 import app.bank.bean.User
+import app.bank.config.UserFilter
 
 interface UserRepository {
 
@@ -8,7 +9,7 @@ interface UserRepository {
 
     fun save(user: User): User
 
-    fun getUsers(): List<User>
+    fun getUsers(userFilter: UserFilter): List<User>
 }
 
 class UserNotFoundException(msg: Long?) : RuntimeException("User could not be found : $msg")

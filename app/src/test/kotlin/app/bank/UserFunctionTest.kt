@@ -11,7 +11,6 @@ internal class UserFunctionTest {
     private val userReader = mockk<UserReader>()
     private val userFunction = UserFunction(userCreator, userReader)
 
-
     private fun userDTOTest(): UserDto {
         return UserDto(
             id = 859,

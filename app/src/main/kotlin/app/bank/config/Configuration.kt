@@ -12,7 +12,6 @@ object Configuration {
 
     init {
         initDdbClient()
-        runChangeSets()
     }
 
     fun getDdbClient(): AmazonDynamoDB {
