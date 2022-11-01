@@ -8,4 +8,4 @@ enum class KeyException {
     INVALID_FORMAT_EMAIL
 }
 
-class ValidationException(msg: String) : RuntimeException()
+class ValidationException(msg: String) : RuntimeException(msg)
