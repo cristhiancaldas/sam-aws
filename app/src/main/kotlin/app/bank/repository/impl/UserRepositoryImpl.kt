@@ -7,6 +7,7 @@ import app.bank.config.UserFilter
 import app.bank.repository.SaveUserException
 import app.bank.repository.UserNotFoundException
 import app.bank.repository.UserRepository
+import app.bank.repository.UsersNotFoundException
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression
@@ -45,7 +46,10 @@ class UserRepositoryImpl(private val ddbClient: AmazonDynamoDB) : UserRepository
             .withFilterExpression(userFilter.buildCriteriaExpression())
             .withExpressionAttributeValues(userFilter.buildCriteriaValues())
             .withExpressionAttributeNames(userFilter.buildCriteriaExpressionNames())
-
-        return ddbMapper.scan(User::class.java, request)
+        try {
+            return ddbMapper.scan(User::class.java, request)
+        } catch (ex: Exception) {
+            throw UsersNotFoundException(ex.message)
+        }
     }
 }

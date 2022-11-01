@@ -15,3 +15,4 @@ interface UserRepository {
 class UserNotFoundException(msg: Long?) : RuntimeException("User could not be found : $msg")
 
 class SaveUserException(msg: String?) : RuntimeException("${"User could not be saved"}: $msg")
+class UsersNotFoundException(msg: String?) : RuntimeException("Users could not be found : $msg")

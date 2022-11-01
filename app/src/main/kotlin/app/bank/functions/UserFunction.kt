@@ -54,7 +54,7 @@ class UserFunction(
     private fun doGet(event: APIGatewayProxyRequestEvent) =
         when (RestPaths.getPath(event.resource)) {
             GET_USER -> getUser(event)
-            LIST_USERS -> getUsers()
+            LIST_USERS -> getUsers(event)
             VALIDATE -> getValidate(event)
             else -> {
                 notFound(event.path + "" + event.resource)
@@ -69,7 +69,9 @@ class UserFunction(
             }
         }
 
-    private fun getUsers(): APIGatewayProxyResponseEvent {
+    private fun getUsers(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
+        log.info("getUsers :::" +event.resource)
+        log.info("getUsers :::" +event.httpMethod)
         val user = userReader.getUsers()
         return ok(Json.encodeToString(user))
     }
