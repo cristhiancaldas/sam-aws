@@ -28,7 +28,7 @@ class UserFunction(
     private val log by LoggerDelegate()
 
     override fun handleRequest(input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
-        log.error("Start handleRequest with event: $input and body ${input.body}")
+        log.info("Start handleRequest with event: $input and body ${input.body}")
         return try {
             handlerEvent(input)
         } catch (ex: Exception) {
@@ -70,10 +70,8 @@ class UserFunction(
         }
 
     private fun getUsers(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
-        log.info("getUsers :::" +event.resource)
-        log.info("getUsers :::" +event.httpMethod)
         val user = userReader.getUsers()
-        return ok(Json.encodeToString(user))
+        return ok(Json { encodeDefaults = true }.encodeToString(user))
     }
 
     private fun getUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
