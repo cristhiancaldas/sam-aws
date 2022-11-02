@@ -33,7 +33,7 @@ class UserRepositoryImpl(private val ddbClient: AmazonDynamoDB) : UserRepository
 
     override fun save(user: User): User {
         try {
-            log.info("fun saveUser")
+            log.info("fun saveUser ::$user")
             ddbMapper.save<User>(user)
             return user
         } catch (ex: Exception) {

@@ -11,7 +11,7 @@ class UserConverter {
 
     fun convert(from: UserDto): User {
         return User(
-            id = from.id,
+            //id = from.id,
             firstName = from.firstName,
             lastName = from.lastName,
             email = from.email,
