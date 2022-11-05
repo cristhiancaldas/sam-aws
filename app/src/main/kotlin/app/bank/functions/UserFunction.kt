@@ -94,7 +94,7 @@ class UserFunction(
 
     private fun getValidate(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
         val messages = event.pathParameters["msg"]!!
-        val message = "Service Operative - 2022-2 - $messages"
+        val message = "Service Operative - 2022-II - $messages"
         return ok(message)
     }
 }
