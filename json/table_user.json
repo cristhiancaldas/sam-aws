@@ -1,0 +1,16 @@
+{
+  "BillingMode": "PAY_PER_REQUEST",
+  "TableName": "USER_OPS",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "ID_USER_PK",
+      "AttributeType": "N"
+    }
+  ],
+  "KeySchema": [
+    {
+      "AttributeName": "ID_USER_PK",
+      "KeyType": "HASH"
+    }
+  ]
+}

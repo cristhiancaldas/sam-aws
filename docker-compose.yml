@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+  dynamodb:
+    image: amazon/dynamodb-local
+    container_name: dynamodb
+    hostname: dynamodb
+    restart: always
+    command: -jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data/
+    volumes:
+      - ./my-dynamodb-data:/home/dynamodblocal/data
+    ports:
+      - "8000:8000"
+    expose:
+      -   8000
+    networks:
+      lambda-local: {}
+networks:
+  lambda-local:
+    name: lambda-local
+    driver: bridge

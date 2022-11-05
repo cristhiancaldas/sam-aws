@@ -24,6 +24,7 @@ Globals:
     Environment:
         Variables:
             DB_MIGRATION: false
+            ENV: !Sub "${Stage}"
 
 Resources:
 
