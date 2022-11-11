@@ -52,4 +52,8 @@ class UserRepositoryImpl(private val ddbClient: AmazonDynamoDB) : UserRepository
             throw UsersNotFoundException(ex.message)
         }
     }
+
+    override fun warMDdbConnection() {
+        ddbMapper.load(User::class.java, -1L)
+    }
 }

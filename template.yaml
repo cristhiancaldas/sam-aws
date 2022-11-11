@@ -14,6 +14,21 @@ Parameters:
      Type: String
      Default: app-user
 
+Mappings:
+     Config:
+         dev:
+            MinListenerCapacity: 1
+            MaxListenerCapacity: 5
+            MinRestCapacity: 1
+            MaxRestCapacity: 5
+            ConcurrentExecutions: 5
+         qa:
+           MinListenerCapacity: 1
+           MaxListenerCapacity: 5
+           MinRestCapacity: 1
+           MaxRestCapacity: 5
+           ConcurrentExecutions: 5
+
 Globals:
   Function:
     Runtime: java11
@@ -104,6 +119,28 @@ Resources:
             Path: /validate/{msg}
             RestApiId:
               Ref: ApiGatewayApi
+
+    UserFunctionScalableTarget:
+      Type: AWS::ApplicationAutoScaling::ScalableTarget
+      Properties:
+        MaxCapacity: !FindInMap [ Config, !Ref Stage, MaxRestCapacity ]
+        MinCapacity: !FindInMap [ Config, !Ref Stage, MinRestCapacity ]
+        ResourceId: !Sub function:${UserFunction}:live # You need to specify an alis or version here
+        RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/lambda.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_LambdaConcurrency
+        ScalableDimension: lambda:function:ProvisionedConcurrency
+        ServiceNamespace: lambda
+      DependsOn: UserFunctionAliaslive # This is your function logical ID + "Alias" + what you use for AutoPublishAlias
+
+    UserFunctionTrackingScalingPolicy:
+      Type: AWS::ApplicationAutoScaling::ScalingPolicy
+      Properties:
+        PolicyName: utilization
+        PolicyType: TargetTrackingScaling
+        ScalingTargetId: !Ref UserFunctionScalableTarget
+        TargetTrackingScalingPolicyConfiguration:
+          TargetValue: 0.5 # I want to keep the utilization of my Provisioned Concurrency close to 70%, Any value between 0.1 and 0.9 can be used here
+          PredefinedMetricSpecification:
+            PredefinedMetricType: LambdaProvisionedConcurrencyUtilization
 
 Outputs:
   MyURLRest:

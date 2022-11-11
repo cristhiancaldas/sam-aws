@@ -14,7 +14,7 @@ class UserCreator(
     }
 
     fun run(user: User): User {
-        userValidator.validatorEmail(user)
+        userValidator.validatorEmail(email = user.email)
         return userOpsRepository.save(user)
     }
 }

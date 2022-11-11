@@ -8,6 +8,7 @@ import app.bank.config.LoggerDelegate
 import app.bank.exception.HttpExceptionHandler
 import app.bank.exception.RestPaths
 import app.bank.exception.RestPaths.*
+import app.bank.shared.LambdaWarmer
 import app.bank.shared.UserConverter
 import app.bank.shared.UserDto
 import app.bank.user.application.UserCreator
@@ -22,10 +23,15 @@ import kotlinx.serialization.json.Json
 
 class UserFunction(
     private val userCreator: UserCreator = UserCreator.instance,
-    private val userReader: UserReader = UserReader.instance
+    private val userReader: UserReader = UserReader.instance,
+    private val warmer: LambdaWarmer = LambdaWarmer.instance
 ) : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>, BaseFunction() {
 
     private val log by LoggerDelegate()
+
+    init {
+        warmer.run()
+    }
 
     override fun handleRequest(input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
         log.info("Start handleRequest with event: $input and body ${input.body}")

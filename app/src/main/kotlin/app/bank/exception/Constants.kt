@@ -5,7 +5,7 @@ object Constants {
 }
 
 enum class KeyException {
-    INVALID_FORMAT_EMAIL
+    INVALID_FORMAT_EMAIL, EMAIL_ALREADY_EXISTS
 }
 
 class ValidationException(msg: String) : RuntimeException(msg)

@@ -10,6 +10,8 @@ interface UserRepository {
     fun save(user: User): User
 
     fun getUsers(userFilter: UserFilter): List<User>
+
+    fun warMDdbConnection()
 }
 
 class UserNotFoundException(msg: Long?) : RuntimeException("User could not be found : $msg")
