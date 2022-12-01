@@ -24,14 +24,11 @@ import kotlinx.serialization.json.Json
 class UserFunction(
     private val userCreator: UserCreator = UserCreator.instance,
     private val userReader: UserReader = UserReader.instance,
-    private val warmer: LambdaWarmer = LambdaWarmer.instance
-) : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>, BaseFunction() {
+     warmer: LambdaWarmer = LambdaWarmer.instance
+) : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>, BaseFunction(warmer) {
 
     private val log by LoggerDelegate()
 
-    init {
-        warmer.run()
-    }
 
     override fun handleRequest(input: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
         log.info("Start handleRequest with event: $input and body ${input.body}")
@@ -62,6 +59,7 @@ class UserFunction(
             GET_USER -> getUser(event)
             ADD_USER -> getUsers(event)
             VALIDATE -> getValidate(event)
+            LIST_USER -> getListUsers(event)
             else -> {
                 notFound(event.path + "" + event.resource)
             }
@@ -96,6 +94,12 @@ class UserFunction(
         val user = UserConverter.instance.convert(userDto)
         userCreator.run(user)
         return created()
+    }
+
+
+    private fun getListUsers(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
+        val users = userReader.getUsers()
+        return ok(Json {encodeDefaults= true}.encodeToString(users))
     }
 
     private fun getValidate(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {

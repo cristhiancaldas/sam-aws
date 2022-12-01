@@ -1,7 +1,12 @@
 package app.bank.functions
+import app.bank.shared.LambdaWarmer
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 
-open class BaseFunction {
+open class BaseFunction (warmer: LambdaWarmer = LambdaWarmer.instance) {
+
+    init {
+        warmer.run()
+    }
 
     inline fun <reified T> getPathParameterValue(event: APIGatewayProxyRequestEvent, pathParameterName: String): T {
         val pathParameterValue = event.pathParameters[pathParameterName]!!
@@ -14,7 +19,7 @@ open class BaseFunction {
     }
 
     inline fun <reified T> getQueryParameterValue(event: APIGatewayProxyRequestEvent, queryParam: String): T {
-        var paramValue = event.queryStringParameters?.let { event.queryStringParameters[queryParam] }
+        val paramValue = event.queryStringParameters?.let { event.queryStringParameters[queryParam] }
         return when (T::class) {
             Boolean::class -> (paramValue?.lowercase()?.toBooleanStrict() ?: false) as T
             Int::class -> paramValue?.toInt() as T
