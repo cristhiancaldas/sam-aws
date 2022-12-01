@@ -10,7 +10,7 @@ import app.bank.repository.UserRepository
 import app.bank.repository.UsersNotFoundException
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 
 class UserRepositoryImpl(private val ddbClient: AmazonDynamoDB) : UserRepository {
 
@@ -42,12 +42,13 @@ class UserRepositoryImpl(private val ddbClient: AmazonDynamoDB) : UserRepository
     }
 
     override fun getUsers(userFilter: UserFilter): List<User> {
-        val request = DynamoDBScanExpression()
+        val request = DynamoDBQueryExpression<User>()
+            .withKeyConditionExpression("#ID_USER_PK = :id_user_pk")
             .withFilterExpression(userFilter.buildCriteriaExpression())
             .withExpressionAttributeValues(userFilter.buildCriteriaValues())
             .withExpressionAttributeNames(userFilter.buildCriteriaExpressionNames())
         try {
-            return ddbMapper.scan(User::class.java, request)
+            return ddbMapper.query(User::class.java, request)
         } catch (ex: Exception) {
             throw UsersNotFoundException(ex.message)
         }
