@@ -57,9 +57,8 @@ class UserFunction(
     private fun doGet(event: APIGatewayProxyRequestEvent) =
         when (RestPaths.getPath(event.resource)) {
             GET_USER -> getUser(event)
-            ADD_USER -> getUsers(event)
+            LIST_USER -> getUsers(event)
             VALIDATE -> getValidate(event)
-            LIST_USER -> getListUsers(event)
             else -> {
                 notFound(event.path + "" + event.resource)
             }

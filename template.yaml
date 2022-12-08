@@ -102,7 +102,7 @@ Resources:
           Type: Api
           Properties:
             Method: GET
-            Path: /users
+            Path: /user
             RestApiId:
               Ref: ApiGatewayApi
         AddUser:
