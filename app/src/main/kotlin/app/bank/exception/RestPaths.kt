@@ -4,7 +4,6 @@ import com.jayway.jsonpath.PathNotFoundException
 
 enum class RestPaths(val path: String) {
     GET_USER("/user/{id}"),
-    EDIT_USER("/user/{id}"),
     ADD_USER("/user"),
     VALIDATE("/validate/{msg}");
     companion object {

@@ -51,9 +51,9 @@ class UserFunction(
 
     private fun doPut(event: APIGatewayProxyRequestEvent) =
         when (RestPaths.getPath(event.resource)) {
-            EDIT_USER -> updateUser(event)
+            GET_USER -> updateUser(event)
             else -> {
-                notFound(event.path + "" + event.resource)
+                notFound(event.path + "-" + event.resource)
             }
         }
 
