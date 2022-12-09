@@ -40,6 +40,22 @@ class UserRepositoryImpl(private val ddbClient: AmazonDynamoDB) : UserRepository
         }
     }
 
+    override fun save(users: List<User>): Int {
+        try {
+            val result = ddbMapper.batchSave(users)
+            val updatedRows = users.size - result.size
+            log.debug(
+                "Total rows : ${users.size} | Updated or Inserted rows count : $updatedRows" +
+                        " | Failed rows count : ${result.size}"
+            )
+            return updatedRows
+        } catch (ex: Exception) {
+            log.error("Users could not be saved | Exception : ${ex.message}")
+            throw SaveUserException(ex.message)
+        }
+    }
+
+
     override fun getUsers(userFilter: UserFilter): List<User> {
         val request = DynamoDBScanExpression()
             .withFilterExpression(userFilter.buildCriteriaExpression())

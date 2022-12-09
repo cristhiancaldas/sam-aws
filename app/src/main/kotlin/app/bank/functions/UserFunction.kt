@@ -13,6 +13,7 @@ import app.bank.shared.UserConverter
 import app.bank.shared.UserDto
 import app.bank.user.application.UserCreator
 import app.bank.user.application.UserReader
+import app.bank.user.application.UserUpdater
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
@@ -22,8 +23,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class UserFunction(
-    private val userCreator: UserCreator = UserCreator.instance,
-    private val userReader: UserReader = UserReader.instance,
+    private val userCreator : UserCreator = UserCreator.instance,
+    private val userReader : UserReader = UserReader.instance,
+    private val userUpdater : UserUpdater = UserUpdater.instance,
      warmer: LambdaWarmer = LambdaWarmer.instance
 ) : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>, BaseFunction(warmer) {
 
@@ -43,6 +45,7 @@ class UserFunction(
         when (event.httpMethod) {
             "GET" -> doGet(event)
             "POST" -> doPost(event)
+            "PUT" -> doPut(event)
             else -> methodNotAllowed()
         }
 
@@ -78,12 +81,15 @@ class UserFunction(
     }
 
     private fun getUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
-        val id = event.pathParameters["id"]!!
-        val user = userReader.getUser(id.toLong())
+        val id : Long = getPathParameterValue(event,"id")
+        val user = userReader.getUser(id)
         return ok(Json { encodeDefaults = true }.encodeToString(user))
     }
 
     private fun updateUser(event: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
+        val id: Long = getPathParameterValue(event,"id")
+        val userDto = Json { ignoreUnknownKeys = true }.decodeFromString<UserDto>(event.body)
+        userUpdater.run(id,userDto)
         return ok()
     }
 

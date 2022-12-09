@@ -9,6 +9,7 @@ interface UserRepository {
 
     fun save(user: User): User
 
+    fun save(users: List<User>): Int
     fun getUsers(userFilter: UserFilter): List<User>
 
     fun warMDdbConnection()
