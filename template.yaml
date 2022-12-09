@@ -91,6 +91,20 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserOpsDbChangeLogDynamoTable
       Events:
+        AddUser:
+          Type: Api
+          Properties:
+            Method: POST
+            Path: /user
+            RestApiId:
+              Ref: ApiGatewayApi
+        UpdateUser:
+          Type: Api
+          Properties:
+            Method: PUT
+            Path: /user/{id}
+            RestApiId:
+              Ref: ApiGatewayApi
         GetUser:
           Type: Api
           Properties:
@@ -105,13 +119,6 @@ Resources:
             Path: /user
             RestApiId:
               Ref: ApiGatewayApi
-        AddUser:
-          Type: Api
-          Properties:
-            Method: POST
-            Path: /user
-            RestApiId:
-              Ref: ApiGatewayApi
         GetValidate:
           Type: Api
           Properties:
@@ -119,7 +126,6 @@ Resources:
             Path: /validate/{msg}
             RestApiId:
               Ref: ApiGatewayApi
-
     UserFunctionScalableTarget:
       Type: AWS::ApplicationAutoScaling::ScalableTarget
       Properties:
