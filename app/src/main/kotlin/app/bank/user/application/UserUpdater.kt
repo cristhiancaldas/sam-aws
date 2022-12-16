@@ -19,8 +19,12 @@ class UserUpdater(
     fun run(idUser: Long, userDTO: UserDto) {
         val user = userReader.getUser(idUser)
         if(user.email != userDTO.email){
-            log.info("email repetido ${userDTO.email}")
+            log.info("Email repeat - ${userDTO.email}")
             userValidator.validatorEmail(userDTO.email)
+        }
+        if(user.phone != userDTO.phone){
+            log.info("Phone repeat - ${userDTO.phone}")
+            userValidator.validateUserExistWithPhone(userDTO.phone)
         }
         user.firstName =userDTO.firstName
         user.lastName = userDTO.lastName

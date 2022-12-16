@@ -35,6 +35,15 @@ class UserValidator(private val userRepository: UserRepository) {
         }
     }
 
+    fun validateUserExistWithPhone(phone: String?) {
+        if (!phone.isNullOrEmpty()) {
+            val duplicatePhone = userRepository.getUsers(UserFilter(phone = phone , active = "1"))
+            if(duplicatePhone.any()){
+                log.warn("Already exist an user with the same email.")
+                throw ValidationException(KeyException.PHONE_ALREADY_EXISTS.name)
+            }
+        }
+    }
     fun validatorEmail(email: String?){
         validateEmail(email)
         validateUserExistWithEmail(email)
